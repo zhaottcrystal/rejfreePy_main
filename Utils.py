@@ -11,10 +11,10 @@ import sys
 import numpy as np
 from numpy import linalg as LA
 
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 ## need to comment this when submitting assignment
 import os
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import math
 import numpy as np
 import InitialCountFactor

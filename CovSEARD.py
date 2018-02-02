@@ -1,6 +1,6 @@
 import numpy as np
 
-from main.Utils import SquareDistance
+import Utils
 
 
 class CovSEARD:
@@ -20,7 +20,7 @@ class CovSEARD:
         :return: kernel matrix
         """
         di = np.fill_diagonal(1/self.ell)
-        K = self.SquareDistance(np.matmul(di, x), np.matmul(di, x))
+        K = Utils.SquareDistance(np.matmul(di, x), np.matmul(di, x))
         result = np.exp(-K/2.0 * self.sf2)
         return result
 
@@ -28,7 +28,7 @@ class CovSEARD:
 def main():
     a = np.array((0.1, 0.1))
     b = np.array((0.2, 0.1))
-    print(SquareDistance(a, b))
+    print(Utils.SquareDistance(a, b))
 
 if __name__ == '__main__':
     main()

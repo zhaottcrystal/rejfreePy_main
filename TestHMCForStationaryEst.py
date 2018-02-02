@@ -3,22 +3,22 @@ import sys
 
 
 from scipy import linalg
-sys.path.append("/Users/crystal/Dropbox/rejfree/main/rejfreePy/")
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/main/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
 import numpy as np
-from main.ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
-from main.FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
-from main.OptionClasses import MCMCOptions
-from main.OptionClasses import RFSamplerOptions
-from main.Utils import summarizeSuffStatUsingEndPoint
-from main.ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
-from main.ExpectedCompleteReversibleModel import ExpectedCompleteReversibleModel
-from main.HMC import HMC
-from main.LocalRFSamplerForOnlyExchangeCoefParam import LocalRFSamplerForOnlyExchangeCoefParam
-from main.PhyloLocalRFMove import PhyloLocalRFMove
-from main.UtilsForCheckingGeneration import getEmpiricalInitialStatesCount
-from main.UtilsForCheckingGeneration import getTransitionCounts
-from main.UtilsForCheckingGeneration import getSojournTime
+from ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
+from FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
+from OptionClasses import MCMCOptions
+from OptionClasses import RFSamplerOptions
+from Utils import summarizeSuffStatUsingEndPoint
+from ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
+from ExpectedCompleteReversibleModel import ExpectedCompleteReversibleModel
+from HMC import HMC
+from LocalRFSamplerForOnlyExchangeCoefParam import LocalRFSamplerForOnlyExchangeCoefParam
+from PhyloLocalRFMove import PhyloLocalRFMove
+from UtilsForCheckingGeneration import getEmpiricalInitialStatesCount
+from UtilsForCheckingGeneration import getTransitionCounts
+from UtilsForCheckingGeneration import getSojournTime
 
 nStates = 4
 nExchange = int(nStates*(nStates-1)/2)

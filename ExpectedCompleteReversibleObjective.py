@@ -9,9 +9,9 @@ import sys
 
 import numpy as np
 
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
 import os
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
 import ReversibleRateMtxPiAndExchangeGTR
 import FullTrajectorGeneration
 import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure

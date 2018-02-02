@@ -1,21 +1,21 @@
 import os
 import sys
 
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import numpy as np
-from main.ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
-from main.FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
-from main.OptionClasses import MCMCOptions
-from main.OptionClasses import RFSamplerOptions
-from main.Utils import summarizeSuffStatUsingEndPoint
-from main.ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
-from main.ExpectedCompleteReversibleModelBinaryFactors import ExpectedCompleteReversibleModelWithBinaryFactors
-from main.HMC import HMC
-from main.LocalRFSamplerForBinaryWeights import LocalRFSamplerForBinaryWeights
-from main.PhyloLocalRFMove import PhyloLocalRFMove
-from main.Utils import generateBivariateFeatGradientIndexWithoutPiWithBivariateFeat
-from main.ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
+from ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
+from FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
+from OptionClasses import MCMCOptions
+from OptionClasses import RFSamplerOptions
+from Utils import summarizeSuffStatUsingEndPoint
+from ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
+from ExpectedCompleteReversibleModelBinaryFactors import ExpectedCompleteReversibleModelWithBinaryFactors
+from HMC import HMC
+from LocalRFSamplerForBinaryWeights import LocalRFSamplerForBinaryWeights
+from PhyloLocalRFMove import PhyloLocalRFMove
+from Utils import generateBivariateFeatGradientIndexWithoutPiWithBivariateFeat
+from ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
 
 nStates = 4
 ## generate the exchangeable coefficients

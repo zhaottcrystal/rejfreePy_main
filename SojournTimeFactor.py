@@ -10,10 +10,10 @@ import sys
 
 import numpy as np
 
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 ## need to comment this when submitting assignment
 import os
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 
 from numpy.random import RandomState
 import CollisionFactor

@@ -1,9 +1,9 @@
 import sys
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
 ## need to comment this when submitting assignment
 import os
 
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
 
 import random
 import CollisionFactor

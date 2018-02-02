@@ -1,8 +1,8 @@
 import os
 import sys
 
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+sys.path.append("/Users/crystal/Dropbox/rejfreePy_main/")
+os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy_main/")
 import numpy as np
 import FullTrajectorGeneration
 import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure

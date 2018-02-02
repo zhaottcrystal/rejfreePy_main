@@ -1,22 +1,24 @@
 
 import os
 import sys
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import numpy as np
-from main.FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
-from main.OptionClasses import MCMCOptions
-from main.OptionClasses import RFSamplerOptions
-from main.Utils import summarizeSuffStatUsingEndPoint
-from main.ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
-from main.ExpectedCompleteReversibleModelBinaryFactors import ExpectedCompleteReversibleModelWithBinaryFactors
-from main.HMC import HMC
-from main.LocalRFSamplerForBinaryWeights import LocalRFSamplerForBinaryWeights
-from main.PhyloLocalRFMove import PhyloLocalRFMove
-from main.ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
-from main.HardCodedDictionaryUtils import getHardCodedDict
-from main.FullTrajectorGeneration import getObsArrayAtSameGivenTimes
-from main.FullTrajectorGeneration import  endPointSamplerSummarizeStatisticsOneBt
+
+from FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
+from FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
+from OptionClasses import MCMCOptions
+from OptionClasses import RFSamplerOptions
+from Utils import summarizeSuffStatUsingEndPoint
+from ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
+from ExpectedCompleteReversibleModelBinaryFactors import ExpectedCompleteReversibleModelWithBinaryFactors
+from HMC import HMC
+from LocalRFSamplerForBinaryWeights import LocalRFSamplerForBinaryWeights
+from PhyloLocalRFMove import PhyloLocalRFMove
+from ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
+from HardCodedDictionaryUtils import getHardCodedDict
+from FullTrajectorGeneration import getObsArrayAtSameGivenTimes
+from FullTrajectorGeneration import  endPointSamplerSummarizeStatisticsOneBt
 from collections import OrderedDict
 from datetime import datetime
 from numpy.random import RandomState

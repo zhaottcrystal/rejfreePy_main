@@ -8,7 +8,7 @@ Created on Thu Feb 16 19:05:11 2017
 
 import sys
 sys.path
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 
 class Path:
     

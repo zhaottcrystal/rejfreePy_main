@@ -1,9 +1,9 @@
 import sys
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 ## need to comment this when submitting assignment
 import os
 
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 
 import random
 

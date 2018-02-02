@@ -1,14 +1,14 @@
 import sys
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import os
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 
-from main.ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
-from main.HMC import HMC
+from ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
+from HMC import HMC
 import numpy as np
-from main.ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
-from main.FullTrajectorGeneration import getFirstAndLastStateOfListOfSeq
-from main.FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
+from ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
+from FullTrajectorGeneration import getFirstAndLastStateOfListOfSeq
+from FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
 
 
 def test():

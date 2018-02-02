@@ -1,8 +1,8 @@
 
 import sys
 import os
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import numpy as np
 import datetime as dt
 from collections import OrderedDict

@@ -3,8 +3,7 @@
 #cwd
 
 import sys
-sys.path
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import numpy as np
 # import ReversibleRateMtx
 from numpy.random import RandomState

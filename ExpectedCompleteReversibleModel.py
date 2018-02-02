@@ -6,10 +6,10 @@ Created on Sun Mar 12 21:18:18 2017
 @author: crystal
 """
 
-import sys
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
-import os
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#import sys
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#import os
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 
 import Utils
 #from main.Utils import addLocalFactorsRestrictedCTMCNoPriorFactor

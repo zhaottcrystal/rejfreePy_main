@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import EndPointSampler
 import PathStatistics
 import Path

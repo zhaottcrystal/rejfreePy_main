@@ -8,7 +8,7 @@ Created on Mon Feb  6 14:53:00 2017
 
 import sys
 sys.path
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
 import numpy as np
 from scipy import linalg # use this module to calculate matrix exponential
 import math

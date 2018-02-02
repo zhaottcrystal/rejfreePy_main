@@ -8,8 +8,8 @@ Created on Thu Feb 16 21:03:55 2017
 import numpy as np
 import sys
 import os
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 
 class PathStatistics:
     

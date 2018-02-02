@@ -8,8 +8,8 @@ Created on Sun Mar 12 16:54:11 2017
 import os
 import sys
 
-sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import numpy as np
 import random as rd
 import datetime as dt
