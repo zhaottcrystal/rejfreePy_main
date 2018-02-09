@@ -33,14 +33,12 @@ class SojournTimeFactorWithoutPiEstWithBinaryFactors(CollisionFactor.CollisionFa
         self.nStates = nStates
         self.bivariateGradInd = Utils.getBivariateFeatGradientIndexWithoutPiWithBivariateFeat(state0, state1,
                                                                                         bivariateFeatIndexDictionary)
-        self.bivariateFeatWeights = bivariateFeatWeights
         self.nVariables = len(bivariateFeatWeights)
         self.pi1 = stationaryDist[state1]
         self.phi = np.zeros(self.nVariables)
         self.phi[self.bivariateGradInd] = 1
         self.holdTime = self.objective.holdTimes[state0]
-        self.variables = self.bivariateFeatWeights
-        self.theta = self.getTheta()
+        self.variables = bivariateFeatWeights
 
 
     def getLowerBoundForCollisionDeltaTime(self, collisionContext):
@@ -58,8 +56,8 @@ class SojournTimeFactorWithoutPiEstWithBinaryFactors(CollisionFactor.CollisionFa
 
             term1 = 1 / np.dot(v, self.phi)
 
-            debug1 = self.holdTime * self.pi1
-            debug2 = np.exp(np.dot(self.variables, self.phi))
+            #debug1 = self.holdTime * self.pi1
+            #debug2 = np.exp(np.dot(self.variables, self.phi))
 
 
             term2 = np.log(c / (self.holdTime * self.pi1 * np.exp(np.dot(self.variables, self.phi))) + 1.0)
@@ -78,12 +76,6 @@ class SojournTimeFactorWithoutPiEstWithBinaryFactors(CollisionFactor.CollisionFa
         result = {'deltaTime': t, 'collision': True}
 
         return result
-
-
-
-    def getTheta(self):
-        self.theta = np.exp(np.dot(self.variables, self.phi))
-        return self.theta
 
 
     def gradient(self):

@@ -14,9 +14,9 @@ import os
 
 #os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 
-from main.ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
-from main.FullTrajectorGeneration import getFirstAndLastStateOfListOfSeq
-from main.FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
+from Main.ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
+from Main.FullTrajectorGeneration import getFirstAndLastStateOfListOfSeq
+from Main.FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
 import copy
 from scipy import optimize
 

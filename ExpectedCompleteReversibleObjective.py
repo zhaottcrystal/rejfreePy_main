@@ -12,7 +12,7 @@ import numpy as np
 #sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
 import os
 #os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
-import ReversibleRateMtxPiAndExchangeGTR
+from ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
 import FullTrajectorGeneration
 import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
 import HardCodedDictionaryUtils
@@ -31,6 +31,7 @@ class ExpectedCompleteReversibleObjective:
         
         self.holdTimes = holdTimes
         self.nInit = nInit
+        self.nStates = len(holdTimes)
         self.nTrans = nTrans
         self.kappa = kappa
         self.nStar = np.sum(self.nInit)
@@ -58,7 +59,7 @@ class ExpectedCompleteReversibleObjective:
         ## and the weights for the bivariate features
 
         ## First get the weights for the univariate features
-        nStates = len(self.nInit)
+        nStates = self.nStates
         dim = len(weights)
         weightsForPi = weights[0:nStates]
         weightsForBivariate = weights[nStates:dim]
@@ -126,7 +127,7 @@ class ExpectedCompleteReversibleObjective:
 
     def calculateForPiUnnormalized(self, weightsforPi, exchangeCoef):
         nStates = len(weightsforPi)
-        rateMtxResult = ReversibleRateMtxPiAndExchangeGTR.ReversibleRateMtxPiAndExchangeGTR(nStates, weightsforPi, exchangeCoef)
+        rateMtxResult = ReversibleRateMtxPiAndExchangeGTR(nStates, weightsforPi, exchangeCoef)
         stationaryDist = rateMtxResult.getStationaryDist()
         unnormalizedRateMtx = rateMtxResult.getRateMtx()
 
@@ -275,7 +276,7 @@ def test():
     exchangeCoef = np.array((1, 2, 3, 4, 5, 6))
 
     ## get the rate matrix
-    testRateMtx = ReversibleRateMtxPiAndExchangeGTR.ReversibleRateMtxPiAndExchangeGTR(nStates, weights, exchangeCoef)
+    testRateMtx = ReversibleRateMtxPiAndExchangeGTR(nStates, weights, exchangeCoef)
     stationaryDist = testRateMtx.getStationaryDist()
     rateMtx = testRateMtx.getRateMtx()
     bt = 5.0

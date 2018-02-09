@@ -1,8 +1,8 @@
 import os
 import sys
 
-sys.path.append("/Users/crystal/Dropbox/rejfreePy_main/")
-os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy_main/")
+#sys.path.append("/Users/crystal/Dropbox/rejfreePy_main/")
+#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy_main/")
 import numpy as np
 import FullTrajectorGeneration
 import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
@@ -98,9 +98,43 @@ class DataGenerationRegime:
         self.nPairSeq = None
 
 
-    def generatingSeqGivenRateMtxAndBtInterval(self):
+    def generatingInitialStateSeq(self):
+        initialStateSeq = FullTrajectorGeneration.generateInitialStateSeqUsingStationaryDist(self.prng, self.nStates,
+                                                                                             self.nSeq,
+                                                                                             self.stationaryDist)
+        return initialStateSeq
 
-        seqList = FullTrajectorGeneration.generateFullPathUsingRateMtxAndStationaryDist(self.nSeq, self.nStates, self.prng, self.rateMtx, self.stationaryDist, self.bt)
+
+    def generatingSeq(self, initialStateSeq=None):
+        if initialStateSeq is None:
+            initialStateSeq = FullTrajectorGeneration.generateInitialStateSeqUsingStationaryDist(self.prng,
+                                                                                                 self.nStates,
+                                                                                                 self.nSeq,
+                                                                                                 self.stationaryDist)
+        seqList = FullTrajectorGeneration.generateFullPathUsingRateMtxAndStationaryDist(self.nSeq, self.nStates,
+                                                                                        self.prng, self.rateMtx,
+                                                                                        self.stationaryDist, self.bt, initialStateSeq)
+        return seqList
+
+    def getSufficientStatFromSeq(self, seqList):
+        nSeq = len(seqList)
+        nStates = len(seqList[0]['sojourn'])
+        totalSojournTime = np.zeros(nStates)
+        totalTransitionCount = np.zeros((nStates, nStates))
+        for i in range(0, nSeq):
+            totalSojournTime = totalSojournTime + seqList[i]['sojourn']
+            totalTransitionCount = totalTransitionCount + seqList[i]['transitCount']
+
+        result = {}
+        result['sojourn'] = totalSojournTime
+        result['transitCount'] = totalTransitionCount
+        return result
+
+
+
+
+    def generatingSeqGivenRateMtxAndBtInterval(self, seqList):
+
         observedTimePoints = np.arange(0, (self.bt + 1), self.interLength)
         observedSeqList = FullTrajectorGeneration.getObsArrayAtSameGivenTimes(seqList, observedTimePoints)
         observedAllSequences = observedSeqList[1:observedSeqList.shape[0], :]

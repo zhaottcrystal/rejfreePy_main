@@ -17,7 +17,7 @@ class RefreshmentMethod(Enum):
 
 
 class RFSamplerOptions:
-    def __init__(self, refreshRate=1000, refreshmentMethod=RefreshmentMethod.LOCAL, alpha=1.0, beta=4.0, trajectoryLength=1.0, maxSteps= 1000000 ):
+    def __init__(self, refreshRate=100, refreshmentMethod=RefreshmentMethod.LOCAL, alpha=1.0, beta=4.0, trajectoryLength=1.0, maxSteps= 1000000 ):
         ## refreshmentMethod can be RefreshmentMethod.LOCAL,
         self.refreshRate = refreshRate
         self.refreshmentMethod = refreshmentMethod

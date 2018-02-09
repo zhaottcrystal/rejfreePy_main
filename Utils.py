@@ -658,7 +658,7 @@ def summarizeSuffStatUsingEndPoint(seqList, bt, currRateMtx):
 
     nStates = currRateMtx.shape[0]
     ## get the initial and last state of eqch sequence
-    firstAndlastStates = getFirstAndLastStateOfListOfSeq(seqList)['firstLastState']
+    firstAndlastStates = FullTrajectorGeneration.getFirstAndLastStateOfListOfSeq(seqList)['firstLastState']
     firstStates = firstAndlastStates[:, 0]
     lastStates = firstAndlastStates[:, 1]
 

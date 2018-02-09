@@ -9,7 +9,7 @@ import ExpectedCompleteReversibleObjective
 import ExpectedCompleteReversibleModelBinaryFactors
 import HMC
 import LocalRFSamplerForBinaryWeights
-import PhyloLocalRFMove
+from PhyloLocalRFMove import PhyloLocalRFMove
 import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
 import FullTrajectorGeneration
 import DataGenerationRegime
@@ -26,6 +26,7 @@ import DataGenerationRegime
 from datetime import datetime
 # from main.DataGenerationRegime import WeightGenerationRegime
 
+from numpy.random import RandomState
 
 class MCMCRunningRegime:
 
@@ -188,6 +189,8 @@ class MCMCRunningRegime:
 
 
     def run(self, initialWeightDist ="Fixed"):
+        ## output the true stationary distribution and exchangeable parameters
+        self.outputTrueParameters(self.dir_name)
 
         # call methods to create initial samples
         initialSamples = self.generateInitialSamples(initialWeightsDist=initialWeightDist)
@@ -213,9 +216,6 @@ class MCMCRunningRegime:
 
         # this algorithm runs a combination of HMC and local BPS
         startTime = datetime.now()
-
-        stationaryTmp = np.zeros((self.dumpResultIterations, self.nStates))
-        exchangeableTmp = np.zeros((self.dumpResultIterations, self.nBivariateFeat))
 
         for i in range(self.nMCMCIter):
 
@@ -247,7 +247,13 @@ class MCMCRunningRegime:
             nTrans = np.zeros((self.nStates, self.nStates))
 
             for j in range(self.dataGenerationRegime.nPairSeq):
-                suffStat = FullTrajectorGeneration.endPointSamplerSummarizeStatisticsOneBt(True, self.prng, initialRateMatrix,
+                ## change it to the true rate matrix and see if the sufficient statistics match
+                #suffStat = FullTrajectorGeneration.endPointSamplerSummarizeStatisticsOneBt(True, self.prng,
+                #                                                                           self.dataGenerationRegime.rateMtxObj.getRateMtx(),
+                #                                                                           self.data[j],
+                #                                                                           self.dataGenerationRegime.interLength)
+
+                suffStat = FullTrajectorGeneration.endPointSamplerSummarizeStatisticsOneBt(True, RandomState(j), initialRateMatrix,
                                                                        self.data[j], self.dataGenerationRegime.interLength)
                 nInit = nInit + suffStat['nInit']
                 holdTime = holdTime + suffStat['holdTimes']
@@ -262,11 +268,11 @@ class MCMCRunningRegime:
 
 
             #####################################
-            hmc = HMC.HMC(self.nLeapFrogSteps, self.stepSize, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
+            hmc = HMC.HMC(RandomState(i), self.nLeapFrogSteps, self.stepSize, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
             if self.onlyHMC:
-                sample = self.prng.uniform(0, 1, len(avgWeights))
+                sample = RandomState(i).uniform(0, 1, len(avgWeights))
             if self.HMCPlusBPS:
-                sample = self.prng.uniform(0, 1, self.nStates)
+                sample = RandomState(i).uniform(0, 1, self.nStates)
 
             samples = hmc.run(0, self.nHMCSamples, sample)
             avgWeights = np.sum(samples, axis=0) / samples.shape[0]
@@ -289,7 +295,7 @@ class MCMCRunningRegime:
                 ## local sampler to use
                 localSampler = LocalRFSamplerForBinaryWeights.LocalRFSamplerForBinaryWeights(model, self.rfOptions, self.mcmcOptions, self.nStates,
                                                               self.bivariateFeatIndexDictionary)
-                phyloLocalRFMove = PhyloLocalRFMove(model=model, sampler=localSampler, initialPoints=initialBinaryWeights, options=self.rfOptions, randomSeed=self.initialSampleSeed)
+                phyloLocalRFMove = PhyloLocalRFMove(model=model, sampler=localSampler, initialPoints=initialBinaryWeights, options=self.rfOptions, prng=RandomState(i))
                 initialBinaryWeights = phyloLocalRFMove.execute()
 
             initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure.ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(self.nStates, initialStationaryWeights,
@@ -375,13 +381,47 @@ class MCMCRunningRegime:
         exchangeableCoefStrName = exchangeableCoefStr + samplingMethod + nMCMCIter
         binaryWeightsStrName = binaryWeightsStr + samplingMethod + nMCMCIter
 
-        if trajectoryLength is not None:
-            stationaryDistStrName = stationaryDistStrName + "trajectoryLength"+ trajectoryLength
-            stationaryWeightsStrName = stationaryWeightsStrName + "trajectoryLength"+  trajectoryLength
-            exchangeableCoefStrName = exchangeableCoefStrName + "trajectoryLength"+ trajectoryLength
-            binaryWeightsStrName = binaryWeightsStrName + "trajectoryLength" + trajectoryLength
+        if self.nStates is not None:
+            stationaryDistStrName = stationaryDistStrName + "nStates" + str(self.nStates)
+            stationaryWeightsStrName = stationaryWeightsStrName +"nStates" + str(self.nStates)
+            exchangeableCoefStrName = exchangeableCoefStrName + "nStates" + str(self.nStates)
+            binaryWeightsStrName = binaryWeightsStrName + "nStates" + str(self.nStates)
             if saveRateMtx:
-                rateMtxStrName = rateMtxStrName + "trajectoryLength"+ trajectoryLength
+                rateMtxStrName = rateMtxStrName + "nStates" + str(self.nStates)
+
+        ## store the sampling seed of the program
+        if self.initialSampleSeed is not None:
+            stationaryDistStrName = stationaryDistStrName + "mcmcSamplingSeed" + str(self.initialSampleSeed)
+            stationaryWeightsStrName = stationaryWeightsStrName + "mcmcSamplingSeed" + str(self.initialSampleSeed)
+            exchangeableCoefStrName = exchangeableCoefStrName + "mcmcSamplingSeed" + str(self.initialSampleSeed)
+            binaryWeightsStrName = binaryWeightsStrName + "mcmcSamplingSeed" + str(self.initialSampleSeed)
+            if saveRateMtx:
+                rateMtxStrName = rateMtxStrName + "mcmcSamplingSeed" + str(self.initialSampleSeed)
+
+
+        if trajectoryLength is not None:
+            stationaryDistStrName = stationaryDistStrName + "trajectoryLength"+ str(trajectoryLength)
+            stationaryWeightsStrName = stationaryWeightsStrName + "trajectoryLength"+  str(trajectoryLength)
+            exchangeableCoefStrName = exchangeableCoefStrName + "trajectoryLength"+ str(trajectoryLength)
+            binaryWeightsStrName = binaryWeightsStrName + "trajectoryLength" + str(trajectoryLength)
+            if saveRateMtx:
+                rateMtxStrName = rateMtxStrName + "trajectoryLength"+ str(trajectoryLength)
+
+        if self.nLeapFrogSteps is not None:
+            stationaryDistStrName = stationaryDistStrName + "nLeapFrogSteps" + str(self.nLeapFrogSteps)
+            stationaryWeightsStrName = stationaryWeightsStrName + "nLeapFrogSteps" + str(self.nLeapFrogSteps)
+            exchangeableCoefStrName = exchangeableCoefStrName + "nLeapFrogSteps" + str(self.nLeapFrogSteps)
+            binaryWeightsStrName = binaryWeightsStrName + "nLeapFrogSteps" + str(self.nLeapFrogSteps)
+            if saveRateMtx:
+                rateMtxStrName = rateMtxStrName + str(self.stepSize)
+
+        if self.stepSize is not None:
+            stationaryDistStrName = stationaryDistStrName + "stepSize" + str(self.stepSize)
+            stationaryWeightsStrName = stationaryWeightsStrName + "stepSize" + str(self.stepSize)
+            exchangeableCoefStrName = exchangeableCoefStrName + "stepSize" + str(self.stepSize)
+            binaryWeightsStrName = binaryWeightsStrName + "stepSize" + str(self.stepSize)
+            if saveRateMtx:
+                rateMtxStrName = rateMtxStrName + str(self.stepSize)
 
 
         if mcmcSeed is not None:
@@ -391,6 +431,8 @@ class MCMCRunningRegime:
             binaryWeightsStrName = binaryWeightsStrName +"mcmcSeed"+ mcmcSeed + ".csv"
             if saveRateMtx:
                 rateMtxStrName = rateMtxStrName + mcmcSeed
+
+
 
         stationaryDistFileName = os.path.join(dir_name, stationaryDistStrName)
         stationaryWeightsFileName = os.path.join(dir_name, stationaryWeightsStrName)
@@ -407,6 +449,25 @@ class MCMCRunningRegime:
         if saveRateMtx:
             result['rateMatrix'] =rateMtxFileName
         return result
+
+
+    def outputTrueParameters(self, dir_name):
+        trueStationaryDistStr = "trueStationaryDistribution"
+        trueStationaryWeightsStr = "trueStationaryWeights"
+        trueExchangeableCoefStr = "trueExchangeableCoef"
+        trueBinaryWeightsStr = "trueBinaryWeights"
+        format = '.csv'
+        trueStationaryDistFileName = os.path.join(dir_name, trueStationaryDistStr + format)
+        trueExchangeableCoefFileName = os.path.join(dir_name, trueExchangeableCoefStr + format)
+        trueStationaryWeightsFileName = os.path.join(dir_name, trueStationaryWeightsStr + format)
+        trueBinaryWeightsFileName = os.path.join(dir_name, trueBinaryWeightsStr + format)
+
+        np.savetxt(trueStationaryDistFileName, self.dataGenerationRegime.stationaryDist, fmt='%.3f', delimiter=',')
+        np.savetxt(trueExchangeableCoefFileName, self.dataGenerationRegime.exchangeCoef, fmt='%.3f', delimiter=',')
+        np.savetxt(trueStationaryWeightsFileName, self.dataGenerationRegime.stationaryWeights, fmt='%.3f',
+                   delimiter=',')
+        np.savetxt(trueBinaryWeightsFileName, self.dataGenerationRegime.bivariateWeights, fmt='%.3f', delimiter=',')
+
 
 
 

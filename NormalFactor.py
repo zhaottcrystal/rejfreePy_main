@@ -14,7 +14,7 @@ import math
 
 class NormalFactor(CollisionFactor.CollisionFactor):
 
-    def __init__(self,  variables, nVariables, gradientIndex):
+    def __init__(self,  variables, nVariables, gradientIndex, sd = 1.0):
         ## mean is the mean of the normal distribution
         ## standardError represents the standard deviaiton of the normal distribution
         ## variable represents the current value of the realization of the Normal distributed variable
@@ -22,15 +22,15 @@ class NormalFactor(CollisionFactor.CollisionFactor):
 
         self.variables = variables
         self.gradientIndex = gradientIndex
+        self.sd = sd
 
 
 
     def normalCollisionTime(self, exponential, xv, vv):
-        s1 = 0
-        if xv < 0:
-            s1 = -xv / vv
-        C = -exponential - s1 * ( xv + vv * s1 / 2.0)
-        result = (-xv + np.sqrt(xv * xv-2.0*vv*C))/vv
+        if xv > 0:
+            result = -xv/vv + np.sqrt(xv * xv+ vv*exponential)/vv
+        else:
+            result = -xv/vv + np.sqrt(vv*exponential)/vv
         return result
 
 
@@ -56,12 +56,20 @@ class NormalFactor(CollisionFactor.CollisionFactor):
 
         result = {'deltaTime': t, 'collision': True}
 
+        ## using numerical solver to check if the solution from a numerical solver is close to the theoretical form
+        ## The numerical solution proves the correctness of the theoretical form
+        # functionValue1 = self.holdTime * self.pi1 * (np.exp(np.dot(self.variables, self.phi)))*(np.exp(np.dot(v, self.phi) * t)-1.0)-c
+        # func = lambda tau: self.holdTime * self.pi1 * (np.exp(np.dot(self.variables, self.phi))) * (np.exp(np.dot(v, self.phi) * tau)-1.0)-c
+        # tau_initial_guess = 0.001
+        # tau_solution = fsolve(func, tau_initial_guess)
+        # functionValue2 = self.holdTime * self.pi1 * (np.exp(np.dot(self.variables, self.phi)))*(np.exp(np.dot(v, self.phi) * tau_solution) - 1.0)-c
+
         return result
 
     def gradient(self):
         """Get the gradient of a factor in terms of the parameters"""
         gradient = np.zeros(len(self.variables))
-        gradient[self.gradientIndex] = self.variables[self.gradientIndex] * (-1.0)
+        gradient[self.gradientIndex] = self.variables[self.gradientIndex]/(self.sd*self.sd)*(-1.0)
         return gradient
 
     def getVariable(self, gradientIndex):
@@ -75,9 +83,9 @@ class NormalFactor(CollisionFactor.CollisionFactor):
     def setPosision(self, position):
         """Set the position of the variables"""
         self.variables[self.gradientIndex] = position
-        return self.variable[self.gradientIndex]
+        return self.variables[self.gradientIndex]
 
     def logDensity(self):
         ## need to find out when logDensity() is used and whether the variable should be the values before the collision or not
-        result = -0.5 * np.dot(self.variables[self.gradientIndex], self.variable[self.gradientIndex]) - np.log(math.sqrt(2* math.pi))
+        result = -0.5 * np.dot(self.variables[self.gradientIndex], self.variables[self.gradientIndex]) - np.log(math.sqrt(2* math.pi))-np.log(self.sd)
         return result

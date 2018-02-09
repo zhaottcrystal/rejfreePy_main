@@ -7,6 +7,7 @@ import sys
 import numpy as np
 # import ReversibleRateMtx
 from numpy.random import RandomState
+import random
 
 class ForwardSimulation:
 
@@ -25,9 +26,11 @@ class ForwardSimulation:
         return QProb
         
     def sampleNextState(self, prng,  curState):
-        samplingProb = self.nextStateProb()[curState,:]
+        samplingProb = self.nextStateProb()[curState, :]
+
         ## sample the next state given the current state curState
-        newState = prng.choice(self.rateMtx.shape[0] , p=samplingProb)
+        newState = np.argmax(prng.multinomial(1, samplingProb, 1))
+           ## prng.choice(self.rateMtx.shape[0], 1, p=samplingProb)
         return newState
         
     def getExpIntensity(self,curState):
@@ -36,7 +39,8 @@ class ForwardSimulation:
         
     def sampleSojournTime(self, prng, curState):
         ## the first parameter of np.random.exponential is scale but not rate parameter
-        time = prng.exponential(1/self.getExpIntensity(curState), 1)
+        #time = prng.exponential(1/self.getExpIntensity(curState), 1)
+        time = random.expovariate(self.getExpIntensity(curState))
         return time
         
     def sampleStateTimeSeq(self, prng, curState):

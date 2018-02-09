@@ -17,7 +17,7 @@ from numpy.random import RandomState
 ## define a class variable
 MAX_N_TRANSITION = 1000000
 cached = True
-epsilon = 0.01
+epsilon = 0.0
 class EndPointSampler:
     
     

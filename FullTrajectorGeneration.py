@@ -42,9 +42,15 @@ def generateFullPath(nSeq, nstates, prng, weights, bt, isNormalized):
     ## get the keys for each sequence seqList[0].keys()    
     return seqList
 
-def generateFullPathUsingRateMtxAndStationaryDist(nSeq, nstates, prng, rateMtx, stationaryDist, bt):
+def generateInitialStateSeqUsingStationaryDist(prng, nStates, nSeq, stationaryDist):
+    initialStateSeq = prng.choice(nStates, nSeq, replace=True, p=stationaryDist)
+    return initialStateSeq
+
+def generateFullPathUsingRateMtxAndStationaryDist(nSeq, nstates, prng, rateMtx, stationaryDist, bt, initialStateSeq=None):
+
     Q = rateMtx
-    initialStateSeq = prng.choice(nstates, nSeq, replace=True, p=stationaryDist)
+    if initialStateSeq is None:
+        initialStateSeq = prng.choice(nstates, nSeq, replace=True, p=stationaryDist)
     ## given the initial state, we sample the full path and save each sequence in a list
     seqList = []
     simulator = SimuSeq.ForwardSimulation(bt, Q)
@@ -468,37 +474,37 @@ def getTreesFromObsTimeSeries(timeSeries, path):
     
 
 ################################################################
-nSeq =100
-nstates = 4
-seedNum = 123
-np.random.seed(seedNum)
-weights = np.random.uniform(0,1,10)
-bt = 10
-prng = RandomState(seedNum)
-seqList = generateFullPath(nSeq, nstates, prng, weights, bt, False)
-avgObs = getAverageNumOfObsFullPath(seqList)
-actualObsNum = getActualNumObs(avgObs, proportion=0.7)
-timePoints = generateSeqObservationTimes(bt, actualObsNum)
-seqArray = getObsArrayAtSameGivenTimes(seqList, timePoints)
-## check the correctness of the result
-#seqArray[0]
-#seqArray[1]
-#timePoints
-#seqList[0]["states"]
-#seqList[0]["time"]
-
-## write tree files to a specific path
-path = "/Users/crystal/Dropbox/rejfree/rejfreePy/data" 
-getTreesFromObsTimeSeries(timePoints, path)
-## write sequence files to a specific path  
-## create list of file names
-filenames = createFileNames((len(timePoints)-1), "alignment")
-##get sequence data in the format of 0, 1, 2, 3
-seqNumSitesDicList = organizeSeqOfTimeSeriesIntoSeqForTrees(seqArray)
-## transform data into A C G T
-seqCharSitesDicList = transformNumSeqListDicToCharacter(seqNumSitesDicList)
-## write sequence to files according to a specified path
-## writeSeqSitesToFiles(path, filenames, seqNumSitesCharacterDicList)
+# nSeq =100
+# nstates = 4
+# seedNum = 123
+# np.random.seed(seedNum)
+# weights = np.random.uniform(0,1,10)
+# bt = 10
+# prng = RandomState(seedNum)
+# seqList = generateFullPath(nSeq, nstates, prng, weights, bt, False)
+# avgObs = getAverageNumOfObsFullPath(seqList)
+# actualObsNum = getActualNumObs(avgObs, proportion=0.7)
+# timePoints = generateSeqObservationTimes(bt, actualObsNum)
+# seqArray = getObsArrayAtSameGivenTimes(seqList, timePoints)
+# ## check the correctness of the result
+# #seqArray[0]
+# #seqArray[1]
+# #timePoints
+# #seqList[0]["states"]
+# #seqList[0]["time"]
+#
+# ## write tree files to a specific path
+# path = "/Users/crystal/Dropbox/rejfree/rejfreePy/data"
+# getTreesFromObsTimeSeries(timePoints, path)
+# ## write sequence files to a specific path
+# ## create list of file names
+# filenames = createFileNames((len(timePoints)-1), "alignment")
+# ##get sequence data in the format of 0, 1, 2, 3
+# seqNumSitesDicList = organizeSeqOfTimeSeriesIntoSeqForTrees(seqArray)
+# ## transform data into A C G T
+# seqCharSitesDicList = transformNumSeqListDicToCharacter(seqNumSitesDicList)
+# ## write sequence to files according to a specified path
+# ## writeSeqSitesToFiles(path, filenames, seqNumSitesCharacterDicList)
   
     
     

@@ -34,7 +34,7 @@ def addLocalFactors(nStates, expectedCompleteReversibleObjective, bivariateWeigh
     ## add all prior normal distribution factors for each bivariateWeights
     dim = len(bivariateWeights)
     for i in range(dim):
-        normalFactor = NormalFactor(bivariateWeights, dim, i)
+        normalFactor = NormalFactor.NormalFactor(bivariateWeights, dim, i)
         localFactors.append(normalFactor)
 
     ## add all sojourn time factors

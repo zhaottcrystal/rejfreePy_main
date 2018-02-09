@@ -45,7 +45,6 @@ class TransitionCountFactorWithoutPiEstWithBinaryFactors(CollisionFactor.Collisi
         self.phi[self.bivariateGradInd] = 1
         self.transitCount = self.objective.nTrans[state0][state1]
         self.variables = self.bivariateFeatWeights
-        self.theta = np.exp(np.dot(self.variables, self.phi))
 
 
     def getLowerBoundForCollisionDeltaTime(self, collisionContext):
@@ -92,7 +91,6 @@ class TransitionCountFactorWithoutPiEstWithBinaryFactors(CollisionFactor.Collisi
     def setPosision(self, position):
         """Set the position of the variables"""
         self.variables = position
-        return self.variables
 
     def logDensity(self):
         ## need to find out when logDensity() is used and whether the variable should be the values before the collision or not

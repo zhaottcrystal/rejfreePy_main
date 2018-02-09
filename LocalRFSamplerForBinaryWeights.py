@@ -9,8 +9,8 @@ from collections import OrderedDict
 
 ## OrderedDict is equivalent to LinkedHashMap in java
 import EventQueue
-import TrajectoryRay
-import CollisionContext
+from TrajectoryRay import TrajectoryRay
+from CollisionContext import CollisionContext
 import Utils
 import OptionClasses
 import NormalFactor
@@ -146,7 +146,7 @@ def neighbourVariables(nStates, collisionFactor, nBivariateFeatWeightsDictionary
     if isinstance(collisionFactor, NormalFactor.NormalFactor):
         result.append(collisionFactor.gradientIndex)
         return result
-    if isinstance(collisionFactor, SojournTimeFactorWithoutPiEstWithBinaryFactors.SojournTimeFactorWithoutPiEstWithBinaryFactors) or isinstance(collisionFactor, TransitionCountWithoutPiEstWithBinaryFactors.TransitionCountFactorWithoutPiEstWithBinaryFactors):
+    if isinstance(collisionFactor, SojournTimeFactorWithoutPiEstWithBinaryFactors.SojournTimeFactorWithoutPiEstWithBinaryFactors) or isinstance(collisionFactor, TransitionCountWithoutPiWithBinaryFactors.TransitionCountFactorWithoutPiEstWithBinaryFactors):
         state0 = collisionFactor.state0
         state1 = collisionFactor.state1
         keyPair = (state0, state1)
@@ -206,7 +206,7 @@ class LocalRFSamplerForBinaryWeights:
         self.rfOptions = rfOptions
         self.mcmcOptions = mcmcOptions
         self.allFactors = model.localFactors
-        self.collisionQueue = EventQueue()
+        self.collisionQueue = EventQueue.EventQueue()
         self.isCollisionMap = OrderedDict()
         self.trajectories = {}
         self.nCollisions = 0
@@ -284,7 +284,12 @@ class LocalRFSamplerForBinaryWeights:
         context = CollisionContext(prng, self.getVelocityMatrix(collisionFactor))
 
         collisionInfo = collisionFactor.getLowerBoundForCollisionDeltaTime(context)
-        candidateCollisionTime = currentTime + collisionInfo['deltaTime']
+        deltaTime = collisionInfo['deltaTime']
+        if isinstance(deltaTime, np.ndarray):
+            deltaTime = np.asarray(deltaTime, dtype=np.float)[0]
+        candidateCollisionTime = currentTime + deltaTime
+        if isinstance(candidateCollisionTime, np.ndarray):
+            candidateCollisionTime = np.asscalar(candidateCollisionTime[0])
         if candidateCollisionTime < 0:
             raise ValueError("The collision time can't be smaller than zero.")
 
@@ -441,23 +446,8 @@ class LocalRFSamplerForBinaryWeights:
                 self.trajectories[variableIndex].t = refreshmentTime
 
 
-        ## update the values of the variables in the non-extended neighbours and the corresponding trajectories
-        # allVarDim = np.arange(0, len(self.model.variables))
-        # nonExtendedVariables = np.setdiff1d(allVarDim, extendedNeighborVariablesIndex)
-        # ## update the variable values and trajectory keys
-        # for i in nonExtendedVariables:
-        #     oldKeysOfNonExtended = self.model.variables[i]
-        #     newKeyNonExtended = self.updateVariable(oldKeysOfNonExtended, refreshmentTime)
-        #     self.trajectories[np.asscalar(newKeyNonExtended)] = self.trajectories[np.asscalar(oldKeysOfNonExtended)]
-        #     self.trajectories[np.asscalar(newKeyNonExtended)].position_t = newKeyNonExtended
-        #     self.trajectories[np.asscalar(newKeyNonExtended)].t = refreshmentTime
-        #     del self.trajectories[np.asscalar(oldKeysOfNonExtended)]
-        #     self.model.variables[i] = newKeyNonExtended
-
-
         ## 2-update rays for variables in immediate neighborhood (and process), update the velocity
         d = int(0)
-        immediateNeighborVariables = np.take(self.model.variables, immediateNeighborVariablesIndex)
 
         if len(np.atleast_1d(immediateNeighborVariablesIndex)) > 1:
             for variableIndex in immediateNeighborVariablesIndex:
@@ -480,19 +470,18 @@ class LocalRFSamplerForBinaryWeights:
         ## initializing should be a boolean variable
         variables = self.model.variables
         dimensionality = len(variables)
-        newVelocity = np.zeros(dimensionality)
 
         if initializing:
-            if self.rfOptions.refreshmentMethod == RefreshmentMethod.RESTRICTED:
+            if self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.RESTRICTED:
                 newVelocity = Utils.uniformOnUnitBall(prng, dimensionality)
             else:
                 newVelocity = prng.normal(0, 1, dimensionality)
         else:
-            if self.rfOptions.refreshmentMethod == RefreshmentMethod.GLOBAL or self.rfOptions.refreshmentMethod == RefreshmentMethod.LOCAL:
+            if self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.GLOBAL or self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.LOCAL:
                 newVelocity = prng.normal(0, 1, dimensionality)
-            elif self.rfOptions.refreshmentMethod == RefreshmentMethod.RESTRICTED:
+            elif self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.RESTRICTED:
                 newVelocity = Utils.uniformOnUnitBall(prng, dimensionality)
-            elif self.rfOptions.refreshmentMethod == RefreshmentMethod.PARTIAL:
+            elif self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.PARTIAL:
                 if initializing:
                     newVelocity = Utils.uniformOnUnitBall(prng, dimensionality)
                 else:
@@ -567,8 +556,9 @@ class LocalRFSamplerForBinaryWeights:
             else:
                 nextRefreshmentTimeCopy = copy.deepcopy(nextRefreshmentTime)
                 self.currentTime = nextRefreshmentTimeCopy
-                self.currentTime = np.asscalar(self.currentTime)
-                if self.rfOptions.refreshmentMethod == RefreshmentMethod.LOCAL:
+                if isinstance(self.currentTime, np.ndarray):
+                    self.currentTime = np.asscalar(self.currentTime)
+                if self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.LOCAL:
                     self.localVelocityRefreshment(prng, nextRefreshmentTimeCopy)
                 else:
                     self.globalVelocityRefreshment(prng, nextRefreshmentTimeCopy, False)
@@ -579,18 +569,18 @@ class LocalRFSamplerForBinaryWeights:
         # self.model.variables = self.updateAllVariables(self.currentTime)
         # change the keys of the trajectory to the new keys
         for index, var in enumerate(self.model.variables):
-            oldKey = self.model.variables[index]
+            #oldKey = self.model.variables[index]
             self.model.variables[index] = self.updateVariable(index, self.currentTime)
-            newKey = self.model.variables[index]
-            if newKey != oldKey:
-                ## TODO: figure out when we need to update the time and the positon of the trajectory ray
-                self.trajectories[index].position_t = self.model.variables[index]
-                self.trajectories[index].t = self.currentTime
+            #newKey = self.model.variables[index]
+            #if newKey != oldKey:
+            #    ## TODO: figure out when we need to update the time and the positon of the trajectory ray
+            #    self.trajectories[index].position_t = self.model.variables[index]
+            #    self.trajectories[index].t = self.currentTime
 
 
         # Ensure that the remaining rays are processed
         self.globalVelocityRefreshment(prng, self.currentTime, False)
-        
+
         return self.model.variables
 
     def getTrajectoryLength(self):

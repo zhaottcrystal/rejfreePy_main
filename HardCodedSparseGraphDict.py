@@ -65,10 +65,9 @@ print(bivariateWeights)
 
 
 
-rfOptions = RFSamplerOptions()
-rfOptions.trajectoryLength = 0.125
+rfOptions = RFSamplerOptions(trajectoryLength=0.05)
 
-mcmcOptions = MCMCOptions(10000,1,0)
+mcmcOptions = MCMCOptions(2000,1,0)
 
 ## create the rate matrix based on the sparse graphical structure
 testRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, stationaryWeights, bivariateWeights, bivariateFeatIndexDictionary)
@@ -163,7 +162,7 @@ binaryWeightsSamples = np.zeros((nMCMCIters, nBivariateFeat))
 exchangeableSamples = np.zeros((nMCMCIters, len(initialExchangeCoef)))
 
 # to debug code, set nMCMCIters=1 temporarily
-nMCMCIters= 500
+nMCMCIters= 2000
 
 firstLastStatesArrayAll = list()
 nPairSeq = int(len(observedTimePoints)-1)
@@ -233,7 +232,7 @@ for i in range(nMCMCIters):
     # sample stationary distribution elements using HMC
     hmc = HMC(40, 0.02, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
     sample = np.random.uniform(0, 1, nStates)
-    samples = hmc.run(0, 2000, sample)
+    samples = hmc.run(0, 10000, sample)
     avgWeights = np.sum(samples, axis=0) / samples.shape[0]
     initialWeights = avgWeights
     stationaryDistEst = np.exp(avgWeights) / np.sum(np.exp(avgWeights))
@@ -249,7 +248,7 @@ for i in range(nMCMCIters):
     #allFactors = model.localFactors
     localSampler = LocalRFSamplerForBinaryWeights(model, rfOptions, mcmcOptions, nStates, bivariateFeatIndexDictionary)
     ####### below is the older version of the sampler
-    phyloLocalRFMove = PhyloLocalRFMove(model, localSampler, initialBinaryWeights, randomSeed=seed)
+    phyloLocalRFMove = PhyloLocalRFMove(model, localSampler, initialBinaryWeights, options=rfOptions, randomSeed=seed)
     initialBinaryWeights = phyloLocalRFMove.execute()
     print("The initial estimates of the binary weights are:")
     #print(initialBinaryWeights)
@@ -265,6 +264,8 @@ for i in range(nMCMCIters):
     initialStationaryDist = np.round(initialRateMtx.getStationaryDist(), 3)
     initialRateMatrix = np.round(initialRateMtx.getRateMtx(), 3)
     initialExchangeCoef = np.round(initialRateMtx.getExchangeCoef(), 3)
+    print(i)
+    print(initialExchangeCoef)
 
 endTime = datetime.now()
 timeElapsed = 'Duration: {}'.format(endTime - startTime)

@@ -1,4 +1,3 @@
-import os
 import sys
 #sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy")
 #os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy")
@@ -15,6 +14,8 @@ import MCMCRunningRegime
 import HardCodedDictionaryUtils
 import OptionClasses
 import argparse
+import FullTrajectorGeneration
+import numpy as np
 
 
 ## add command line argument
@@ -83,7 +84,28 @@ weightGenerationRegime.generateBivariateWeightsFromNormal()
 
 dataRegime = DataGenerationRegime.DataGenerationRegime(nStates=nStates,  bivariateFeatIndexDictionary=HardCodedDictionaryUtils.getHardCodedDictChainGraph(nStates=nStates), btLength=bt, nSeq=nSeq, weightGenerationRegime=weightGenerationRegime, prng = prng, interLength=interLength)
 ## generate the sequences data
-firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval()
+initialStateSeq = dataRegime.generatingInitialStateSeq()
+seqList = dataRegime.generatingSeq(initialStateSeq)
+suffStat = dataRegime.getSufficientStatFromSeq(seqList)
+firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval(seqList)
+trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
+
+####################################################
+## validate the data generating process is correct via the sufficient statistics of the time series.
+## get the rate matrix and see if the sufficient statistics is consistent with the rate matrix we use to generate the data
+## get the initial count of each state
+# sojournTime = suffStat['sojourn']
+# transitCount = suffStat['transitCount']
+# nInit = np.bincount(initialStateSeq)
+# ii = np.nonzero(nInit)[0]
+# nInitCount = np.vstack((ii, nInit[ii])).T
+# empiricalStationary = nInit/nSeq
+# ## compare it with stationary distribution
+# print(empiricalStationary)
+# print(dataRegime.stationaryDist)
+# ## calculate the exchangeable coefficients
+# theta = (transitCount[0, 1] + transitCount[1, 0])/(empiricalStationary[0]* sojournTime[1]+ empiricalStationary[1]*sojournTime[0])
+# print(theta)
 
 ####################################################
 # BPS algorithm
@@ -96,7 +118,7 @@ firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval()
 
 #mcmcWriteToFile = mcmcRegime.recordResult(mcmcSamples, "/Users/crystal/Dropbox/rejfree/rejfreePy/results/", "wallTime", "HMCPlusBPS", nMCMCIter=2000, saveRateMtx=False)
 
-mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter, thinning=1.0, burnIn=0, onlyHMC= True, HMCPlusBPS=False,
+mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter, thinning=1.0, burnIn=0, onlyHMC= results.onlyHMC, HMCPlusBPS=results.HMCPlusBPS,
                                           nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize, nHMCSamples=nHMCSamples, saveRateMtx=False, initialSampleSeed=initialSampleSeed,
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength), dumpResultIteratively=True,
                                                             dumpResultIterations=dumpResultIterations, dir_name="/Users/crystal/Dropbox/try/IterativelyTry")
