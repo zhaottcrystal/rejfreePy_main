@@ -58,7 +58,7 @@ parser.add_argument('-nSeq', action='store', dest='nSeq', type=int, default= 500
 parser.add_argument('-interLength', action='store', dest='interLength', type=float, default=1.0, help='store the interval length of two observation points in the time series')
 
 results = parser.parse_args()
-
+dir_name = results.dir_name
 nSeq = results.nSeq
 bt = results.bt
 nStates = results.nStates
@@ -121,10 +121,11 @@ trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
 mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter, thinning=1.0, burnIn=0, onlyHMC= results.onlyHMC, HMCPlusBPS=results.HMCPlusBPS,
                                           nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize, nHMCSamples=nHMCSamples, saveRateMtx=False, initialSampleSeed=initialSampleSeed,
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength), dumpResultIteratively=True,
-                                                            dumpResultIterations=dumpResultIterations, dir_name="/Users/crystal/Dropbox/try/IterativelyTry")
+                                                            dumpResultIterations=dumpResultIterations, dir_name=dir_name)
 mcmcRegimeIteratively.run()
 
 
+#"/Users/crystal/Dropbox/try/IterativelyTry"
 ################################################
 # the 4th and fifth weights are so large and so small lead to very large and very small stationary distributions,
 # so that we adjust the weight to have a more balanced stationary distributions if we use Normal distributions to generate those weight
