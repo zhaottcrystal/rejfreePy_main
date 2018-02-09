@@ -239,7 +239,8 @@ class MCMCRunningRegime:
                 ## record the results
                 self.dumpResult(stationaryDistSamples[(i+1-self.dumpResultIterations):(i+1), :],   allFileNames['stationaryDist'])
                 self.dumpResult(exchangeableSamples[(i+1-self.dumpResultIterations):(i+1), :], allFileNames['exchangeableCoef'])
-
+                self.dumpResult(binaryWeightsSamples[(i+1-self.dumpResultIterations):(i+1), :], allFileNames['binaryWeights'])
+                self.dumpResult(stationaryWeightsSamples[(i+1-self.dumpResultIterations):(i+1), :], allFileNames['stationaryWeights'])
 
 
             nInit = np.zeros(self.nStates)
@@ -380,6 +381,15 @@ class MCMCRunningRegime:
         stationaryWeightsStrName = stationaryWeightsStr + samplingMethod + nMCMCIter
         exchangeableCoefStrName = exchangeableCoefStr + samplingMethod + nMCMCIter
         binaryWeightsStrName = binaryWeightsStr + samplingMethod + nMCMCIter
+
+        if self.dataGenerationRegime.nSeq is not None:
+            stationaryDistStrName = stationaryDistStrName + "nSeq" + str(self.dataGenerationRegime.nSeq)
+            stationaryWeightsStrName = stationaryWeightsStrName + "nSeq" + str(self.dataGenerationRegime.nSeq)
+            exchangeableCoefStrName = exchangeableCoefStrName + "nSeq" + str(self.dataGenerationRegime.nSeq)
+            binaryWeightsStrName = binaryWeightsStrName + "nSeq" + str(self.dataGenerationRegime.nSeq)
+            if saveRateMtx:
+                rateMtxStrName = rateMtxStrName + "nSeq" + str(self.dataGenerationRegime.nSeq)
+
 
         if self.nStates is not None:
             stationaryDistStrName = stationaryDistStrName + "nStates" + str(self.nStates)

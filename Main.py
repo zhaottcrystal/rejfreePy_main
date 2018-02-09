@@ -56,6 +56,8 @@ parser.add_argument('-bt', action='store', dest='bt', type=float, default=5.0, h
 parser.add_argument('-nSeq', action='store', dest='nSeq', type=int, default= 5000, help='store the number of sequences of the time series')
 ## store the time interval between two observation points
 parser.add_argument('-interLength', action='store', dest='interLength', type=float, default=1.0, help='store the interval length of two observation points in the time series')
+## add the refreshment rate of lbps algorithm
+parser.add_argument('-refreshmentRate', action='store', dest='interLength', type=float, default=10, help='store the refreshment rate for the lbps algorithm')
 
 results = parser.parse_args()
 dir_name = results.dir_name
