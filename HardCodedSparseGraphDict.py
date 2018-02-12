@@ -1,8 +1,8 @@
 
 import os
 import sys
-#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
-#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+sys.path.append("/Users/crystal/Dropbox/rejfreePy_main/")
+os.chdir("/Users/crystal/Dropbox/rejfreePy_main/")
 import numpy as np
 
 from FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
@@ -26,7 +26,7 @@ import argparse
 
 argv = sys.argv[1:]
 parser = argparse.ArgumentParser()
-parser.add_argument('-nMCMCIter', action='store', dest='nMCMCIter', type=int, help = 'store the number of MCMC iterations')
+parser.add_argument('-nMCMCIter', action='store', dest='nMCMCIter', type=int, default =2000, help = 'store the number of MCMC iterations')
 results = parser.parse_args()
 nMCMCIters = results.nMCMCIter
 
@@ -109,7 +109,7 @@ np.round(trueExchangeCoef, 3)
 bt = 5.0
 nSeq = 5000
 prng = RandomState(seed)
-seqList = generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, prng, rateMtx, stationaryDist, bt)
+seqList = generateFullPathUsingRateMtxAndStationaryDist(prng, nSeq, nStates, rateMtx, stationaryDist, bt)
 observedTimePoints = np.arange(0, (bt+1))
 observedSeqList = getObsArrayAtSameGivenTimes(seqList, observedTimePoints)
 observedAllSequences = observedSeqList[1:observedSeqList.shape[0], :]
@@ -270,7 +270,7 @@ for i in range(nMCMCIters):
     initialRateMatrix = initialRateMtx.getRateMtx()
     initialExchangeCoef = initialRateMtx.getExchangeCoef()
     print(i)
-    #print(initialExchangeCoef)
+    print(initialExchangeCoef)
 
 endTime = datetime.now()
 timeElapsed = 'Duration: {}'.format(endTime - startTime)

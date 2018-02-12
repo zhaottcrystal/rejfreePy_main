@@ -28,6 +28,15 @@ from FullTrajectorGeneration import getObsArrayAtSameGivenTimes
 from FullTrajectorGeneration import endPointSamplerSummarizeStatisticsOneBt
 from HardCodedDictionaryUtils import getHardCodedDict
 from datetime import datetime
+from numpy.random import RandomState
+import argparse
+
+argv = sys.argv[1:]
+parser = argparse.ArgumentParser()
+parser.add_argument('-nMCMCIter', action='store', type = int, default=2000, dest='nMCMCIter', help = 'store the number of MCMC iterations')
+results = parser.parse_args()
+nMCMCIters = results.nMCMCIter
+
 
 nStates = 6
 ## generate the exchangeable coefficients
@@ -64,7 +73,7 @@ print(bivariateWeights)
 
 
 rfOptions = RFSamplerOptions()
-mcmcOptions = MCMCOptions(10000, 1, 0)
+mcmcOptions = MCMCOptions(nMCMCIters, 1, 0)
 
 ## create the rate matrix based on the sparse graphical structure
 testRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, stationaryWeights, bivariateWeights,
@@ -94,8 +103,8 @@ print(trueExchangeCoef)
 ## generate data sequences of a CTMC with an un-normalized rate matrix
 bt = 5.0
 nSeq = 5000
-
-seqList = generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, seed, rateMtx, stationaryDist, bt)
+prng = np.random.RandomState(1)
+seqList = generateFullPathUsingRateMtxAndStationaryDist(prng=prng, nSeq=nSeq, nstates=nStates, rateMtx=rateMtx, stationaryDist=stationaryDist, bt=bt)
 observedTimePoints = np.arange(0, (bt+1))
 observedSeqList = getObsArrayAtSameGivenTimes(seqList, observedTimePoints)
 observedAllSequences = observedSeqList[1:observedSeqList.shape[0], :]
@@ -141,14 +150,12 @@ initialExchangeCoef = initialRateMtx.getExchangeCoef()
 print(initialExchangeCoef)
 
 ## obtain the sufficient statistics based on the current values of the parameters and perform MCMC sampling scheme
-nMCMCIters = mcmcOptions.nMCMCSweeps
 thinningPeriod = MCMCOptions().thinningPeriod
 burnIn = MCMCOptions().burnIn
 
 
 weightSamples = np.zeros((nMCMCIters, (nStates+nBivariateFeat)))
 # to debug code, set nMCMCIters=1 temporarily
-nMCMCIters = 1200
 avgWeights = np.zeros((nStates+nBivariateFeat))
 avgWeights[0:nStates] = initialWeights
 avgWeights[nStates: (nStates+nBivariateFeat)] = initialBinaryWeights
@@ -212,7 +219,7 @@ for i in range(nMCMCIters):
     nTrans = np.zeros((nStates, nStates))
 
     for j in range(nPairSeq):
-        suffStat =  endPointSamplerSummarizeStatisticsOneBt(True, initialRateMatrix, firstLastStatesArrayAll[j], 1.0)
+        suffStat =  endPointSamplerSummarizeStatisticsOneBt(True, RandomState(j), initialRateMatrix, firstLastStatesArrayAll[j], 1.0)
         nInit = nInit + suffStat['nInit']
         holdTime = holdTime + suffStat['holdTimes']
         nTrans = nTrans + suffStat['nTrans']
@@ -221,7 +228,7 @@ for i in range(nMCMCIters):
     expectedCompleteReversibleObjective = ExpectedCompleteReversibleObjective(holdTime, nInit, nTrans, 1.0, nBivariateFeatWeightsDictionary= bivariateFeatIndexDictionary)
 
     # sample stationary distribution elements using HMC
-    hmc = HMC(40, 0.002, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
+    hmc = HMC(RandomState(i), 40, 0.002, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
     sample = np.random.uniform(0, 1, len(avgWeights))
     samples = hmc.run(0, 2000, sample)
     avgWeights = np.sum(samples, axis=0) / samples.shape[0]
@@ -237,16 +244,16 @@ for i in range(nMCMCIters):
                                                                                initialBinaryWeights,
                                                                                bivariateFeatIndexDictionary)
 
-    # initialStationaryDist = initialRateMtx.getStationaryDist()
-    initialStationaryDist = np.round(initialRateMtx.getStationaryDist(), 3)
-    initialRateMatrix = np.round(initialRateMtx.getRateMtx(), 3)
-    initialExchangeCoef = np.round(initialRateMtx.getExchangeCoef(), 3)
-    print("The initial estimates of the exchangeable parameters are:")
-    print(initialExchangeCoef)
-    print("The estimated stationary distribution is")
-    print(stationaryDistEst)
-    print("The estimated rate matrix is ")
-    print(initialRateMatrix)
+    initialStationaryDist = initialRateMtx.getStationaryDist()
+    #initialStationaryDist = np.round(initialStationaryDist, 3)
+    initialRateMatrix = initialRateMtx.getRateMtx()
+    initialExchangeCoef = initialRateMtx.getExchangeCoef()
+    #print("The initial estimates of the exchangeable parameters are:")
+    #print(initialExchangeCoef)
+    #print("The estimated stationary distribution is")
+    #print(stationaryDistEst)
+    #print("The estimated rate matrix is ")
+    #print(initialRateMatrix)
     # print(initialStationaryDist)
     print(i)
 
