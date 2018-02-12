@@ -26,7 +26,7 @@ import argparse
 
 argv = sys.argv[1:]
 parser = argparse.ArgumentParser()
-parser.add_argument('-nMCMCIter', action='store', dest='nMCMCIter', help = 'store the number of MCMC iterations')
+parser.add_argument('-nMCMCIter', action='store', dest='nMCMCIter', type=int, help = 'store the number of MCMC iterations')
 results = parser.parse_args()
 nMCMCIters = results.nMCMCIter
 
@@ -255,7 +255,7 @@ for i in range(nMCMCIters):
     ####### below is the older version of the sampler
     phyloLocalRFMove = PhyloLocalRFMove(model, localSampler, initialBinaryWeights, options=rfOptions, prng=RandomState(i))
     initialBinaryWeights = phyloLocalRFMove.execute()
-    print("The initial estimates of the binary weights are:")
+    #print("The initial estimates of the binary weights are:")
     #print(initialBinaryWeights)
 
     #localSamplerOld = LocalRFSamplerForBinaryWeightsOldVersion(model, rfOptions, mcmcOptions, nStates,
@@ -270,7 +270,7 @@ for i in range(nMCMCIters):
     initialRateMatrix = np.round(initialRateMtx.getRateMtx(), 3)
     initialExchangeCoef = np.round(initialRateMtx.getExchangeCoef(), 3)
     print(i)
-    print(initialExchangeCoef)
+    #print(initialExchangeCoef)
 
 endTime = datetime.now()
 timeElapsed = 'Duration: {}'.format(endTime - startTime)
