@@ -23,7 +23,7 @@ import numpy as np
 argv = sys.argv[1:]
 parser = argparse.ArgumentParser()
 ## add the number of states as arguments
-parser.add_argument('-nStates', action="store", type=int, dest='nStates', help='save the number of states in the ctmc')
+parser.add_argument('-nStates', action="store", type=int, dest='nStates', default=2, help='save the number of states in the ctmc')
 ## add boolean variable to indicate whether we only use hmc or we use a combination of hmc and local bps
 parser.add_argument('--onlyHMC', action="store_true", help='HMC flag, the existence of the argument indicates HMC is used.')
 ## add boolean variable to indicate whether we use the local bps algorithm
@@ -58,6 +58,13 @@ parser.add_argument('-nSeq', action='store', dest='nSeq', type=int, default= 500
 parser.add_argument('-interLength', action='store', dest='interLength', type=float, default=1.0, help='store the interval length of two observation points in the time series')
 ## add the refreshment rate of lbps algorithm
 parser.add_argument('-refreshmentRate', action='store', dest='interLength', type=float, default=10, help='store the refreshment rate for the lbps algorithm')
+## add the method we use to generate the initial weights
+parser.add_argument('-initialSamplesGenerateMethod', action='store', dest='initialSamplesMethod', default='Uniform', help='store the method used to generate the initial weights samples, the options include Uniform, Normal, Fixed, AssignedWeightsValues')
+## add the initial univariate weights if we would like to provide initial weights
+parser.add_argument('-univariateWeights', action='store', dest='uniWeights', help = 'store the univariate weights for the stationary distribution')
+## add the initial bivariate weights if we would like to provide initial weights
+parser.add_argument('-bivariateWeights', action='store', dest='biWeights', help = 'store the bivariate weights for the exchangeable parameters')
+
 
 results = parser.parse_args()
 dir_name = results.dir_name
@@ -72,6 +79,17 @@ initialSampleSeed = results.initialSampleSeed
 interLength= results.interLength
 nHMCSamples = results.nHMCSamples
 dumpResultIterations = results.dumpResultIterations
+
+if results.uniWeights is not None:
+    uniWeights = np.array(eval(results.uniWeights))
+if results.biWeights is not None:
+    biWeights = np.array(eval(results.biWeights))
+
+if results.initialSamplesGenerateMethod is not None:
+    initialWeightsDist = results.initialSamplesGenerateMethod
+else:
+    initialWeightsDist = 'Fixed'
+
 
 ####################################################
 ## Weight Generation
@@ -124,7 +142,12 @@ mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIte
                                           nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize, nHMCSamples=nHMCSamples, saveRateMtx=False, initialSampleSeed=initialSampleSeed,
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength), dumpResultIteratively=True,
                                                             dumpResultIterations=dumpResultIterations, dir_name=dir_name)
-mcmcRegimeIteratively.run()
+if initialWeightsDist is not None:
+    mcmcRegimeIteratively.run(initialWeightDist = initialWeightsDist)
+    if initialWeightsDist == "AssignedWeightsValues" and uniWeights is not None and biWeights is not None:
+        mcmcRegimeIteratively.run(initialWeightDist = initialWeightsDist, uniWeightsValues=uniWeights, biWeightsValues=biWeights)
+else:
+    mcmcRegimeIteratively.run()
 
 
 #"/Users/crystal/Dropbox/try/IterativelyTry"

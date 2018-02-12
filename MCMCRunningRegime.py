@@ -112,7 +112,13 @@ class MCMCRunningRegime:
         result['initialBinaryWeights'] = initialBinaryWeights
         return result
 
-    def generateInitialSamples(self, initialWeightsDist="uniform"):
+    def generateFixedInitialWeightsValues(self, uniWeightsValues, biWeightsValues):
+        result = {}
+        result['initialStationaryWeights'] = uniWeightsValues
+        result['initialBinaryWeights'] = biWeightsValues
+        return result
+
+    def generateInitialSamples(self, initialWeightsDist="Uniform", uniWeightsValues=None, biWeightsValues=None):
 
         if initialWeightsDist == "Uniform":
             weights = self.generateInitialWeightsFromUniformDist()
@@ -120,8 +126,17 @@ class MCMCRunningRegime:
             weights = self.generateInitialWeightsFromNormalDist()
         if initialWeightsDist == "Fixed":
             weights = self.generateFixedInitialWeights()
-        if initialWeightsDist is not None and not initialWeightsDist.__contains__("Uniform") and not initialWeightsDist.__contains__("Normal") and not initialWeightsDist.__contains__("Fixed"):
-            raise Exception("The provided string for initial distribution of weights is not Uniform, Normal or fixed scalars")
+        if initialWeightsDist == "AssignedWeightsValues":
+            if uniWeightsValues is None or biWeightsValues is None:
+                raise Exception("The provided initial weights values can't be None")
+            else:
+                weights = self.generateFixedInitialWeightsValues(uniWeightsValues, biWeightsValues)
+
+        if initialWeightsDist is not None and not initialWeightsDist.__contains__("Uniform") \
+                and not initialWeightsDist.__contains__("Normal") and not initialWeightsDist.__contains__("Fixed")\
+                and not initialWeightsDist.__contains__("AssignedWeightsValues"):
+            raise Exception("The provided string for initial distribution of weights is not Uniform, Normal, fixed scalars or fixed provided initial values")
+
 
         initialStationaryWeights = weights['initialStationaryWeights']
         initialBinaryWeights = weights['initialBinaryWeights']
@@ -188,12 +203,12 @@ class MCMCRunningRegime:
         return result
 
 
-    def run(self, initialWeightDist ="Fixed"):
+    def run(self, initialWeightDist ="Fixed", uniWeightsValues=None, biWeightsValues=None):
         ## output the true stationary distribution and exchangeable parameters
         self.outputTrueParameters(self.dir_name)
 
         # call methods to create initial samples
-        initialSamples = self.generateInitialSamples(initialWeightsDist=initialWeightDist)
+        initialSamples = self.generateInitialSamples(initialWeightsDist=initialWeightDist, uniWeightsValues=uniWeightsValues, biWeightsValues=biWeightsValues)
         # decompose the initial samples
         initialStationaryWeights = initialSamples['initialStationaryWeights']
         initialStationaryDist = initialSamples['initialStationaryDist']

@@ -65,7 +65,7 @@ print(bivariateWeights)
 
 
 
-rfOptions = RFSamplerOptions(trajectoryLength=0.05)
+rfOptions = RFSamplerOptions(trajectoryLength=0.125)
 
 mcmcOptions = MCMCOptions(2000,1,0)
 
