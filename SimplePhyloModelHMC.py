@@ -207,7 +207,7 @@ for i in range(nMCMCIters):
     stationarySamples[i, :] = initialStationaryDist
     binaryWeightsSamples[i, :] = initialBinaryWeights
     exchangeableSamples[i, :] = initialExchangeCoef
-    rateMatrixSamples[i, :, :] = initialRateMatrix
+    #rateMatrixSamples[i, :, :] = initialRateMatrix
     stationaryWeightsSamples[i, :] = initialWeights
 
     # use endpointSampler to collect sufficient statistics of the ctmc given the current values of the parameters
@@ -263,7 +263,7 @@ timeElapsed = 'Duration: {}'.format(endTime - startTime)
 print("The elapsed time interval is ")
 print(timeElapsed)
 
-download_dir = "timeElapsedHMC.csv" #where you want the file to be downloaded to
+download_dir = "timeElapsedHMC" + str(nMCMCIters)+ ".csv" #where you want the file to be downloaded to
 csv = open(download_dir, "w")
 #"w" indicates that you're writing strings to the file
 columnTitleRow = "elapsedTime\n"
@@ -277,7 +277,7 @@ np.savetxt('stationaryDistributionHMC.csv', stationarySamples, fmt='%.3f', delim
 np.savetxt('stationaryWeightHMC.csv', stationaryWeightsSamples, fmt='%.3f', delimiter=',')
 np.savetxt('exchangeableParametersHMC.csv', exchangeableSamples, fmt='%.3f', delimiter=',')
 np.savetxt('binaryWeightsHMC.csv', binaryWeightsSamples, fmt='%.3f', delimiter=',')
-np.save('3dsaveHMC.npy', rateMatrixSamples)
+#np.save('3dsaveHMC.npy', rateMatrixSamples)
 
 
 
