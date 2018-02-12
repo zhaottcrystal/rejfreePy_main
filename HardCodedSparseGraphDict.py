@@ -22,8 +22,13 @@ from FullTrajectorGeneration import  endPointSamplerSummarizeStatisticsOneBt
 from collections import OrderedDict
 from datetime import datetime
 from numpy.random import RandomState
+import argparse
 
-
+argv = sys.argv[1:]
+parser = argparse.ArgumentParser()
+parser.add_argument('-nMCMCIter', action='store', dest='nMCMCIter', help = 'store the number of MCMC iterations')
+results = parser.parse_args()
+nMCMCIters = results.nMCMCIter
 
 nStates = 6
 ## generate the exchangeable coefficients
@@ -67,7 +72,7 @@ print(bivariateWeights)
 
 rfOptions = RFSamplerOptions(trajectoryLength=0.125)
 
-mcmcOptions = MCMCOptions(2000,1,0)
+mcmcOptions = MCMCOptions(nMCMCIters,1,0)
 
 ## create the rate matrix based on the sparse graphical structure
 testRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, stationaryWeights, bivariateWeights, bivariateFeatIndexDictionary)
@@ -162,7 +167,7 @@ binaryWeightsSamples = np.zeros((nMCMCIters, nBivariateFeat))
 exchangeableSamples = np.zeros((nMCMCIters, len(initialExchangeCoef)))
 
 # to debug code, set nMCMCIters=1 temporarily
-nMCMCIters= 10000
+nMCMCIters= nMCMCIters
 
 firstLastStatesArrayAll = list()
 nPairSeq = int(len(observedTimePoints)-1)
@@ -204,7 +209,7 @@ for i in range(nMCMCIters):
     stationarySamples[i, :] = initialStationaryDist
     binaryWeightsSamples[i, :] = initialBinaryWeights
     exchangeableSamples[i, :] = initialExchangeCoef
-    rateMatrixSamples[i, :, :] = initialRateMatrix
+    #rateMatrixSamples[i, :, :] = initialRateMatrix
     stationaryWeightsSamples[i, :] = initialWeights
 
     # use endpointSampler to collect sufficient statistics of the ctmc given the current values of the parameters
@@ -282,11 +287,16 @@ row = timeElapsed
 csv.write(str(row))
 csv.close()
 
-np.savetxt('stationaryDistributionlbps.csv', stationarySamples, fmt='%.3f', delimiter=',')
-np.savetxt('stationaryWeightlbps.csv', stationaryWeightsSamples, fmt='%.3f', delimiter=',')
-np.savetxt('exchangeableParameterslbps.csv', exchangeableSamples, fmt='%.3f', delimiter=',')
-np.savetxt('binaryWeightslbps.csv', binaryWeightsSamples, fmt='%.3f', delimiter=',')
-np.save('3dsavelbps.npy', rateMatrixSamples)
+
+stationaryDistName = "stationaryDistlbps" + str(nMCMCIters) + ".csv"
+stationaryWeightsName = "stationaryWeightlbps" + str(nMCMCIters) +".csv"
+exchangeableCoefName = "exchangeableParameterslbps" + str(nMCMCIters) +".csv"
+binaryWeightsName = "binaryWeightslbps" + str(nMCMCIters) +".csv"
+np.savetxt(stationaryDistName, stationarySamples, fmt='%.3f', delimiter=',')
+np.savetxt(stationaryWeightsName, stationaryWeightsSamples, fmt='%.3f', delimiter=',')
+np.savetxt(exchangeableCoefName, exchangeableSamples, fmt='%.3f', delimiter=',')
+np.savetxt(binaryWeightsName, binaryWeightsSamples, fmt='%.3f', delimiter=',')
+#np.save('3dsavelbps2000.npy', rateMatrixSamples)
 
 
 
