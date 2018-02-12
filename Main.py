@@ -81,12 +81,15 @@ nHMCSamples = results.nHMCSamples
 dumpResultIterations = results.dumpResultIterations
 
 if results.uniWeights is not None:
+    #np.fromstring('1, 2', dtype=int, sep=',')
     uniWeights = np.array(eval(results.uniWeights))
+        #np.fromstring(results.uniWeights, dtype=float, sep=',')
 if results.biWeights is not None:
     biWeights = np.array(eval(results.biWeights))
+        #np.fromstring(results.biWeights, dtype=float, sep=',')
 
-if results.initialSamplesGenerateMethod is not None:
-    initialWeightsDist = results.initialSamplesGenerateMethod
+if results.initialSamplesMethod is not None:
+    initialWeightsDist = results.initialSamplesMethod
 else:
     initialWeightsDist = 'Fixed'
 
@@ -143,9 +146,11 @@ mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIte
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength), dumpResultIteratively=True,
                                                             dumpResultIterations=dumpResultIterations, dir_name=dir_name)
 if initialWeightsDist is not None:
-    mcmcRegimeIteratively.run(initialWeightDist = initialWeightsDist)
     if initialWeightsDist == "AssignedWeightsValues" and uniWeights is not None and biWeights is not None:
-        mcmcRegimeIteratively.run(initialWeightDist = initialWeightsDist, uniWeightsValues=uniWeights, biWeightsValues=biWeights)
+        mcmcRegimeIteratively.run(initialWeightDist = initialWeightsDist, uniWeightsValues=results.uniWeights, biWeightsValues=results.biWeights)
+    else:
+        mcmcRegimeIteratively.run(initialWeightDist = initialWeightsDist)
+
 else:
     mcmcRegimeIteratively.run()
 

@@ -120,8 +120,8 @@ class MCMCRunningRegime:
 
     def generateInitialSamples(self, initialWeightsDist="Uniform", uniWeightsValues=None, biWeightsValues=None):
 
-        if initialWeightsDist == "Uniform":
-            weights = self.generateInitialWeightsFromUniformDist()
+        weights = self.generateInitialWeightsFromUniformDist()
+
         if initialWeightsDist == "Normal":
             weights = self.generateInitialWeightsFromNormalDist()
         if initialWeightsDist == "Fixed":
