@@ -563,7 +563,7 @@ class LocalRFSamplerForBinaryWeights:
                 else:
                     self.globalVelocityRefreshment(prng, nextRefreshmentTimeCopy, False)
                 nextRefreshmentTime += prng.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
-            print(self.currentTime)
+            #print(self.currentTime)
             print(i)
 
         # self.model.variables = self.updateAllVariables(self.currentTime)

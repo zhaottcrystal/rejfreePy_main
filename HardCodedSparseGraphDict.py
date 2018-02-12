@@ -162,7 +162,7 @@ binaryWeightsSamples = np.zeros((nMCMCIters, nBivariateFeat))
 exchangeableSamples = np.zeros((nMCMCIters, len(initialExchangeCoef)))
 
 # to debug code, set nMCMCIters=1 temporarily
-nMCMCIters= 2000
+nMCMCIters= 10000
 
 firstLastStatesArrayAll = list()
 nPairSeq = int(len(observedTimePoints)-1)
@@ -220,7 +220,7 @@ for i in range(nMCMCIters):
     nTrans = np.zeros((nStates, nStates))
 
     for j in range(nPairSeq):
-        suffStat = endPointSamplerSummarizeStatisticsOneBt(True, prng, initialRateMatrix, firstLastStatesArrayAll[j], 1.0)
+        suffStat = endPointSamplerSummarizeStatisticsOneBt(True, RandomState(j), initialRateMatrix, firstLastStatesArrayAll[j], 1.0)
         nInit = nInit + suffStat['nInit']
         holdTime = holdTime + suffStat['holdTimes']
         nTrans = nTrans + suffStat['nTrans']
@@ -232,7 +232,7 @@ for i in range(nMCMCIters):
     # sample stationary distribution elements using HMC
     hmc = HMC(40, 0.02, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
     sample = np.random.uniform(0, 1, nStates)
-    samples = hmc.run(0, 10000, sample)
+    samples = hmc.run(0, 2000, sample)
     avgWeights = np.sum(samples, axis=0) / samples.shape[0]
     initialWeights = avgWeights
     stationaryDistEst = np.exp(avgWeights) / np.sum(np.exp(avgWeights))
@@ -248,7 +248,7 @@ for i in range(nMCMCIters):
     #allFactors = model.localFactors
     localSampler = LocalRFSamplerForBinaryWeights(model, rfOptions, mcmcOptions, nStates, bivariateFeatIndexDictionary)
     ####### below is the older version of the sampler
-    phyloLocalRFMove = PhyloLocalRFMove(model, localSampler, initialBinaryWeights, options=rfOptions, randomSeed=seed)
+    phyloLocalRFMove = PhyloLocalRFMove(model, localSampler, initialBinaryWeights, options=rfOptions, prng=RandomState(i))
     initialBinaryWeights = phyloLocalRFMove.execute()
     print("The initial estimates of the binary weights are:")
     #print(initialBinaryWeights)

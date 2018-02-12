@@ -48,11 +48,11 @@ class TestForwardAndEndPointSamplers:
 
         transition = np.zeros((nStates, nStates))
         sojournTime = np.zeros(nStates)
-        prng = np.random.RandomState(1)
 
         nIters = 1000000
         for i in range(nIters):
             current = Path()
+            prng = np.random.RandomState(i)
             startState = prng.choice(nStates, 1, replace=True, p=stationaryDist)
             curResult = fwdSampler.sampleStateTimeSeq(prng, startState)
             print(curResult['transitCount'])
@@ -61,7 +61,7 @@ class TestForwardAndEndPointSamplers:
             current.states = curResult["states"]
             current.times = curResult["time"]
             p2 = Path()
-            postSampler.sample(RandomState(1), current.firstState(), current.lastState(), T, pathStat2, p2)
+            postSampler.sample(np.random.RandomState(i + nIters), current.firstState(), current.lastState(), T, pathStat2, p2)
             print(i)
 
         m2 = pathStat2.getCountsAsSimpleMatrix() / nIters

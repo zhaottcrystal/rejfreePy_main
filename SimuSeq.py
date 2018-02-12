@@ -27,6 +27,8 @@ class ForwardSimulation:
         
     def sampleNextState(self, prng,  curState):
         samplingProb = self.nextStateProb()[curState, :]
+        if len(samplingProb.shape) == 2:
+            samplingProb = samplingProb[0]
 
         ## sample the next state given the current state curState
         newState = np.argmax(prng.multinomial(1, samplingProb, 1))
