@@ -478,10 +478,10 @@ class MCMCRunningRegime:
 
 
     def outputTrueParameters(self, dir_name):
-        trueStationaryDistStr = "trueStationaryDistribution"
-        trueStationaryWeightsStr = "trueStationaryWeights"
-        trueExchangeableCoefStr = "trueExchangeableCoef"
-        trueBinaryWeightsStr = "trueBinaryWeights"
+        trueStationaryDistStr = "trueStationaryDistribution" + str(self.nStates)
+        trueStationaryWeightsStr = "trueStationaryWeights" + str(self.nStates)
+        trueExchangeableCoefStr = "trueExchangeableCoef" + str(self.nStates)
+        trueBinaryWeightsStr = "trueBinaryWeights" + str(self.nStates)
         format = '.csv'
         trueStationaryDistFileName = os.path.join(dir_name, trueStationaryDistStr + format)
         trueExchangeableCoefFileName = os.path.join(dir_name, trueExchangeableCoefStr + format)

@@ -41,8 +41,8 @@ class ForwardSimulation:
         
     def sampleSojournTime(self, prng, curState):
         ## the first parameter of np.random.exponential is scale but not rate parameter
-        #time = prng.exponential(1/self.getExpIntensity(curState), 1)
-        time = random.expovariate(self.getExpIntensity(curState))
+        time = prng.exponential(1/self.getExpIntensity(curState), 1)
+        #time = random.expovariate(self.getExpIntensity(curState))
         return time
         
     def sampleStateTimeSeq(self, prng, curState):
