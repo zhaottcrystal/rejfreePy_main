@@ -102,7 +102,7 @@ class TestForwardAndEndPointSamplers:
             current.states = curResult["states"]
             current.times = curResult["time"]
             p2 = Path()
-            postSampler.sample(current.firstState(), current.lastState(), T, pathStat2, p2)
+            postSampler.sample(np.random.RandomState(i + nIters), current.firstState(), current.lastState(), T, pathStat2, p2)
             print(i)
         
         m2 = pathStat2.getCountsAsSimpleMatrix()/nIters
@@ -145,7 +145,7 @@ class TestForwardAndEndPointSamplers:
             current.states = curResult["states"]
             current.times = curResult["time"]
             p2 = Path()
-            postSampler.sample(current.firstState(), current.lastState(), T, pathStat2, p2)
+            postSampler.sample(np.random.RandomState(i + nIters), current.firstState(), current.lastState(), T, pathStat2, p2)
             print(i)
 
         m2 = pathStat2.getCountsAsSimpleMatrix() / nIters

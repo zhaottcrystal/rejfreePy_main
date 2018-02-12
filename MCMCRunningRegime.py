@@ -318,9 +318,10 @@ class MCMCRunningRegime:
                                                                                            initialBinaryWeights,
                                                                                            bivariateFeatIndexDictionary=self.bivariateFeatIndexDictionary)
 
-            initialStationaryDist = np.round(initialRateMtx.getStationaryDist(), 3)
-            initialRateMatrix = np.round(initialRateMtx.getRateMtx(), 3)
-            initialExchangeCoef = np.round(initialRateMtx.getExchangeCoef(), 3)
+            initialStationaryDist = initialRateMtx.getStationaryDist()
+            initialRateMatrix = initialRateMtx.getRateMtx()
+            initialExchangeCoef = initialRateMtx.getExchangeCoef()
+            initialBinaryWeights = initialBinaryWeights
             print("The current iteration finished is:")
             print(i)
 

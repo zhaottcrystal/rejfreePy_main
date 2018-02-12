@@ -46,7 +46,7 @@ def generateInitialStateSeqUsingStationaryDist(prng, nStates, nSeq, stationaryDi
     initialStateSeq = prng.choice(nStates, nSeq, replace=True, p=stationaryDist)
     return initialStateSeq
 
-def generateFullPathUsingRateMtxAndStationaryDist(nSeq, nstates, prng, rateMtx, stationaryDist, bt, initialStateSeq=None):
+def generateFullPathUsingRateMtxAndStationaryDist(prng, nSeq, nstates, rateMtx, stationaryDist, bt, initialStateSeq=None):
 
     Q = rateMtx
     if initialStateSeq is None:
@@ -55,6 +55,7 @@ def generateFullPathUsingRateMtxAndStationaryDist(nSeq, nstates, prng, rateMtx, 
     seqList = []
     simulator = SimuSeq.ForwardSimulation(bt, Q)
     for i in range(0, nSeq):
+        prng = RandomState(i)
         seq = simulator.sampleStateTimeSeq(prng, initialStateSeq[i])
         seqList.append(seq)
     ## get the keys for each sequence seqList[0].keys()

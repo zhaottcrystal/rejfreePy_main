@@ -111,9 +111,8 @@ class DataGenerationRegime:
                                                                                                  self.nStates,
                                                                                                  self.nSeq,
                                                                                                  self.stationaryDist)
-        seqList = FullTrajectorGeneration.generateFullPathUsingRateMtxAndStationaryDist(self.nSeq, self.nStates,
-                                                                                        self.prng, self.rateMtx,
-                                                                                        self.stationaryDist, self.bt, initialStateSeq)
+        seqList = FullTrajectorGeneration.generateFullPathUsingRateMtxAndStationaryDist(self.prng, self.nSeq, self.nStates, self.rateMtx,
+                                                                                 self.stationaryDist, self.bt, initialStateSeq)
         return seqList
 
     def getSufficientStatFromSeq(self, seqList):

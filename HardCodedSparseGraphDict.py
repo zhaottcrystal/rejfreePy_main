@@ -266,9 +266,9 @@ for i in range(nMCMCIters):
     initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, initialWeights, initialBinaryWeights,
                                                               bivariateFeatIndexDictionary)
 
-    initialStationaryDist = np.round(initialRateMtx.getStationaryDist(), 3)
-    initialRateMatrix = np.round(initialRateMtx.getRateMtx(), 3)
-    initialExchangeCoef = np.round(initialRateMtx.getExchangeCoef(), 3)
+    initialStationaryDist = initialRateMtx.getStationaryDist()
+    initialRateMatrix = initialRateMtx.getRateMtx()
+    initialExchangeCoef = initialRateMtx.getExchangeCoef()
     print(i)
     #print(initialExchangeCoef)
 
