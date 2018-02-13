@@ -366,7 +366,14 @@ class MCMCRunningRegime:
             samplingMethod = str(samplingMethod)
         if not isinstance(nMCMCIter, str):
             nMCMCIter= str(nMCMCIter)
-        timeFileName = os.path.join(dir_name, time_base_filename+samplingMethod+nMCMCIter+format)
+        timeStr = time_base_filename+samplingMethod+nMCMCIter+str(self.nStates)
+        if self.samplingMethod == "HMCPlusBPS":
+            timeStr = timeStr + "trajectoryLength" + str(self.trajectoryLength)
+        else:
+            timeStr = timeStr + "stepSize" + str(self.stepSize) + "nLeapFrogSteps" + str(self.nLeapFrogSteps)
+
+        timeStr = timeStr + format
+        timeFileName = os.path.join(dir_name, timeStr)
         csv = open(timeFileName, "w")
         columnTitleRow = "elapsedTime in seconds\n"
         csv.write(columnTitleRow)
