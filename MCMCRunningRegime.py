@@ -32,7 +32,7 @@ class MCMCRunningRegime:
 
     def __init__(self, dataGenerationRegime, nMCMCIter, thinning, burnIn, onlyHMC, HMCPlusBPS, prng=None, nLeapFrogSteps=40,
                  stepSize=0.02, nHMCSamples=2000, saveRateMtx = False, initialSampleSeed=None, rfOptions=None,
-                 dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd()):
+                 dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000):
         if prng is None:
             self.prng = dataGenerationRegime.prng
         else:
@@ -82,6 +82,7 @@ class MCMCRunningRegime:
 
         self.saveRateMtx = saveRateMtx
         self.dir_name = dir_name
+        self.nItersPerPathAuxVar = nItersPerPathAuxVar
 
     def generateFixedInitialWeights(self):
 
@@ -231,18 +232,14 @@ class MCMCRunningRegime:
 
         # this algorithm runs a combination of HMC and local BPS
         startTime = datetime.now()
+        if self.onlyHMC:
+            initializedPosteriorSamples = self.initializeHMCWeights(initialStationaryWeights, initialBinaryWeights)
+            weightSamples = initializedPosteriorSamples['weightSamples']
+            sample = initializedPosteriorSamples['avgWeights']
+        else:
+            sample = initialStationaryWeights
 
         for i in range(self.nMCMCIter):
-
-            if self.onlyHMC:
-                if i == 0:
-                # initialize the posteriorSamples at the 0th iteration specifically for HMC
-                    initializedPosteriorSamples = self.initializeHMCWeights(initialStationaryWeights, initialBinaryWeights)
-                    weightSamples = initializedPosteriorSamples['weightSamples']
-                    avgWeights = initializedPosteriorSamples['avgWeights']
-                if i > 0:
-                   weightSamples[i, :] = avgWeights
-
             stationaryWeightsSamples[i, :] = initialStationaryWeights
             binaryWeightsSamples[i, :] = initialBinaryWeights
             exchangeableSamples[i,:] = initialExchangeCoef
@@ -282,26 +279,24 @@ class MCMCRunningRegime:
             if self.onlyHMC:
                 expectedCompleteReversibleObjective = ExpectedCompleteReversibleObjective.ExpectedCompleteReversibleObjective(holdTime, nInit, nTrans, 1.0, nBivariateFeatWeightsDictionary=self.bivariateFeatIndexDictionary)
 
-
             #####################################
             hmc = HMC.HMC(RandomState(i), self.nLeapFrogSteps, self.stepSize, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
-            if self.onlyHMC:
-                sample = RandomState(i).uniform(0, 1, len(avgWeights))
-            if self.HMCPlusBPS:
-                sample = RandomState(i).uniform(0, 1, self.nStates)
+            lastSample = sample
+            for k in range(self.nItersPerPathAuxVar):
+                 hmcResult = hmc.doIter(RandomState(i), self.nLeapFrogSteps, self.stepSize, lastSample, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
+                 lastSample = hmcResult.next_q
 
-            samples = hmc.run(0, self.nHMCSamples, sample)
-            avgWeights = np.sum(samples, axis=0) / samples.shape[0]
+            sample = lastSample                 
 
             if self.onlyHMC:
-                initialStationaryWeights = avgWeights[0:self.nStates]
-                initialBinaryWeights = avgWeights[self.nStates:(self.nStates + self.nBivariateFeat)]
+                initialStationaryWeights = sample[0:self.nStates]
+                initialBinaryWeights = sample[self.nStates:(self.nStates + self.nBivariateFeat)]
 
             # sample stationary distribution elements using HMC
             if self.HMCPlusBPS:
-                initialStationaryWeights = avgWeights
+                initialStationaryWeights = sample
                 # update stationary distribution elements to the latest value
-                initialStationaryDist = np.exp(avgWeights) / np.sum(np.exp(avgWeights))
+                initialStationaryDist = np.exp(sample) / np.sum(np.exp(sample))
                 # sample exchangeable coefficients using local bouncy particle sampler
                 ## define the model
                 model = ExpectedCompleteReversibleModelBinaryFactors.ExpectedCompleteReversibleModelWithBinaryFactors(expectedCompleteReversibleObjective, self.nStates,

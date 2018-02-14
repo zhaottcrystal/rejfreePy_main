@@ -24,7 +24,7 @@ import plotly.plotly as py
 import plotly.graph_objs as go
 
 
-def obtainSufficientStatisticsForOneRateMtx():
+def obtainSufficientStatisticsForOneRateMtx(nStates):
 
     ## we generate the sufficient statistics for a large number of replications first
     ## and then we summarize the sufficient statistics for the forward sampler and
@@ -172,68 +172,35 @@ def testLocalBPSForStationaryAndBivariateWeights(data):
 
 
 
-def testHMCForStationaryAndBivariateWeights():
-    nStates = 2
-    nRep = 10000
-    seedNum = np.arange(0, nRep)
-    bivariateDictionary = getHardCodedDictChainGraph(nStates)
-    bt = 5.0
-    nSeq = 100
+def testHMCForStationaryAndBivariateWeights(data):
+    avgNTrans = data['transitCount']
+    avgHoldTimes = data['sojourn']
+    avgNInit = data['nInit']
+    bivariateDictionary = data['bivariateDictionary']
 
-    prng = RandomState(1234567890)
-    stationaryWeights = prng.uniform(0, 1, nStates)
-    bivariateWeights = prng.normal(0, 1, int((nStates) * (nStates - 1) / 2))
-    testRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, stationaryWeights,
-                                                                            bivariateWeights, bivariateDictionary)
-    stationaryDist = testRateMtx.getStationaryDist()
-    rateMatrix = testRateMtx.getRateMtx()
-    print(rateMatrix)
-    print(stationaryDist)
-    print(testRateMtx.getExchangeCoef())
-
-    nInit = np.zeros(nStates)
-    holdTimes = np.zeros(nStates)
-    nTrans = np.zeros((nStates, nStates))
-
-    for i in seedNum:
-
-        seqList = generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, RandomState(i) , rateMatrix, stationaryDist, bt)
-        ## summarize the sufficient statistics
-        ## extract first state from sequences
-        firstStates = getFirstAndLastStateOfListOfSeq(seqList)['firstLastState'][:, 0]
-        unique, counts = np.unique(firstStates, return_counts=True)
-        nInitCount = np.asarray((unique, counts)).T
-        nInit = nInit + nInitCount[:, 1]
-
-        for  j in range(nSeq):
-            sequences = seqList[j]
-            holdTimes = holdTimes + sequences['sojourn']
-            nTrans = nTrans + sequences['transitCount']
-        print(i)
-
-    avgNTrans = nTrans / nRep
-    avgHoldTimes = holdTimes / nRep
-    avgNInit = nInit / nRep
-
-    expectedCompleteReversibleObjective = ExpectedCompleteReversibleObjective(holdTimes=avgHoldTimes, nInit=avgNInit,
-                                                                              nTrans=avgNTrans, kappa=1, nBivariateFeatWeightsDictionary=bivariateDictionary)
     prng = np.random.RandomState(1)
+    ## run HMC to estimate the stationary distribution                                          nBivariateFeatWeightsDictionary=bivariateDictionary)
+    nStates = data['rateMatrix'].shape[0]
+    expectedCompleteReversibleObjective = ExpectedCompleteReversibleObjective(holdTimes=avgHoldTimes, nInit=avgNInit,
+                                                                              nTrans=avgNTrans, kappa=1,
+                                                                              nBivariateFeatWeightsDictionary=bivariateDictionary)
+
     hmc = HMC(prng, 40, 0.02, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
-    sample = prng.uniform(0, 1, int(nStates+nStates*(nStates-1)/2))
+    sample = prng.uniform(0, 1, int(nStates + nStates * (nStates - 1) / 2))
     samples = hmc.run(0, 10000, sample)
+
     ## from the weights, obtain stationary distribution and exchangeable parameters
     avgStationaryWeights = np.sum(samples[:, 0:nStates], axis=0) / samples.shape[0]
-    stationaryDistEst = np.exp(avgStationaryWeights) / np.sum(np.exp(avgStationaryWeights))
-    avgBinaryWeights = np.sum(samples[:, nStates:(nStates + int(nStates*(nStates-1)/2))])/samples.shape[0]
+    avgBinaryWeights = np.sum(samples[:, nStates:(nStates + int(nStates * (nStates - 1) / 2))]) / samples.shape[0]
     newRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, avgStationaryWeights,
-                                                                                           avgBinaryWeights,
-                                                                                           bivariateFeatIndexDictionary=bivariateDictionary)
+                                                                           avgBinaryWeights,
+                                                                           bivariateFeatIndexDictionary=bivariateDictionary)
     exchangeableParam = newRateMtx.getExchangeCoef()
     stationaryDistEst = newRateMtx.getStationaryDist()
     print(exchangeableParam)
     print(stationaryDistEst)
-    print(testRateMtx.getExchangeCoef())
-    print(testRateMtx.getStationaryDist())
+
+
 
 
 
