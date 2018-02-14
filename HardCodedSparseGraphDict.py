@@ -235,7 +235,7 @@ for i in range(nMCMCIters):
     expectedCompleteReversibleObjective = ExpectedCompleteReversibleObjective(holdTime, nInit, nTrans, 1.0, initialExchangeCoef)
 
     # sample stationary distribution elements using HMC
-    hmc = HMC(RandomState(i), 40, 0.02, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
+    hmc = HMC(40, 0.02, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
     sample = np.random.uniform(0, 1, nStates)
     samples = hmc.run(0, 2000, sample)
     avgWeights = np.sum(samples, axis=0) / samples.shape[0]

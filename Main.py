@@ -94,7 +94,7 @@ seedGenData = results.seed
 prng = RandomState(seedGenData)
 weightGenerationRegime = DataGenerationRegime.WeightGenerationRegime(nStates = nStates, nBivariateFeat= int(nStates *(nStates-1)/2), prng=prng)
 weightGenerationRegime.generateStationaryWeightsFromUniform()
-weightGenerationRegime.generateBivariateWeightsFromUniform()
+weightGenerationRegime.generateBivariateWeightsFromNormal()
 
 ####################################################
 ## sequences data generation

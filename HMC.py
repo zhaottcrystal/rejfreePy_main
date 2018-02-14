@@ -11,12 +11,12 @@ import DataStruct
 #from main.DataStruct import  DataStruct
 
 class HMC:
-    def __init__(self, prng, l, epsilon, gradient, func):
+    def __init__(self, l, epsilon, gradient, func):
         self.l = l
         self.epsilon = epsilon
         self.gradient = gradient
         self.func = func
-        self.prng = prng
+
 
     def run(self, burnIn, totalNumSample, sample):
 
@@ -25,7 +25,7 @@ class HMC:
         samples = np.zeros(((totalNumSample-burnIn), sample.shape[0]))
 
         for i in range(totalNumSample):
-            result = self.doIter(self.prng, self.l, self.epsilon, sample, self.gradient, self.func, True)
+            result = self.doIter(self.l, self.epsilon, sample, self.gradient, self.func, True)
             sample = result.next_q
             if (i+1) % 100 == 0:
                 print("Iteration" + str(i+1)+".")
@@ -35,7 +35,7 @@ class HMC:
         return samples
 
     @staticmethod
-    def doIter(prng, l, epsilon, lastSample, gradient, func, randomizedNumberOfSteps):
+    def doIter(l, epsilon, lastSample, gradient, func, randomizedNumberOfSteps):
 
         D = lastSample.shape[0]
 
@@ -47,7 +47,7 @@ class HMC:
         proposal = lastSample
 
         ## generate Momentum Vector
-        old_p = prng.normal(0, 1, D)
+        old_p = np.random.normal(0, 1, D)
 
         p = old_p - gradient.mFunctionValue(proposal) * 0.5 * epsilon
 
@@ -82,7 +82,8 @@ class HMC:
         ## the function value returns the potential energy
         ## double check about this
         energy = - proposed_E
-        if prng.uniform(0, 1, 1) > mr:
+        acceptance = np.random.uniform(0, 1, 1)
+        if acceptance  > mr:
             nextSample = lastSample
             accept = False
             energy = -original_E
@@ -113,7 +114,7 @@ def main():
     targetSigma = targetSigma.reshape(2,2)
     targetMean = np.array((3.0, 5.0))
     ge = GaussianExample(targetMean, targetSigma)
-    hmc = HMC(RandomState(1), 40, 0.05, ge, ge)
+    hmc = HMC(40, 0.05, ge, ge)
     sample = np.array((1.0, 2.0))
     samples = hmc.run(0, 5000, sample)
     print(np.sum(samples, axis=0)/samples.shape[0])

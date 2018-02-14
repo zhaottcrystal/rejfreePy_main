@@ -280,10 +280,10 @@ class MCMCRunningRegime:
                 expectedCompleteReversibleObjective = ExpectedCompleteReversibleObjective.ExpectedCompleteReversibleObjective(holdTime, nInit, nTrans, 1.0, nBivariateFeatWeightsDictionary=self.bivariateFeatIndexDictionary)
 
             #####################################
-            hmc = HMC.HMC(RandomState(i), self.nLeapFrogSteps, self.stepSize, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
+            hmc = HMC.HMC(self.nLeapFrogSteps, self.stepSize, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
             lastSample = sample
             for k in range(self.nItersPerPathAuxVar):
-                 hmcResult = hmc.doIter(RandomState(i), self.nLeapFrogSteps, self.stepSize, lastSample, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
+                 hmcResult = hmc.doIter(self.nLeapFrogSteps, self.stepSize, lastSample, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective, True)
                  lastSample = hmcResult.next_q
 
             sample = lastSample                 
@@ -300,7 +300,7 @@ class MCMCRunningRegime:
                 # sample exchangeable coefficients using local bouncy particle sampler
                 ## define the model
                 model = ExpectedCompleteReversibleModelBinaryFactors.ExpectedCompleteReversibleModelWithBinaryFactors(expectedCompleteReversibleObjective, self.nStates,
-                                                                         initialBinaryWeights, initialStationaryDist,
+                                                                       initialBinaryWeights,  initialStationaryDist,
                                                                          self.bivariateFeatIndexDictionary)
                 ## define the sampler to use
                 ## local sampler to use

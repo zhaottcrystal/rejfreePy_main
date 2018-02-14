@@ -31,7 +31,8 @@ class ForwardSimulation:
             samplingProb = samplingProb[0]
 
         ## sample the next state given the current state curState
-        newState = np.argmax(prng.multinomial(1, samplingProb, 1))
+        #newState = np.argmax(prng.multinomial(1, samplingProb, 1))
+        newState = np.argmax(np.random.multinomial(1, samplingProb, 1))
            ## prng.choice(self.rateMtx.shape[0], 1, p=samplingProb)
         return newState
         
@@ -41,8 +42,8 @@ class ForwardSimulation:
         
     def sampleSojournTime(self, prng, curState):
         ## the first parameter of np.random.exponential is scale but not rate parameter
-        time = prng.exponential(1/self.getExpIntensity(curState), 1)
-        #time = random.expovariate(self.getExpIntensity(curState))
+        #time = prng.exponential(1/self.getExpIntensity(curState), 1)
+        time = random.expovariate(self.getExpIntensity(curState))
         return time
         
     def sampleStateTimeSeq(self, prng, curState):
