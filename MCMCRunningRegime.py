@@ -266,7 +266,7 @@ class MCMCRunningRegime:
                 #                                                                           self.data[j],
                 #                                                                           self.dataGenerationRegime.interLength)
 
-                suffStat = FullTrajectorGeneration.endPointSamplerSummarizeStatisticsOneBt(True, RandomState(j), initialRateMatrix,
+                suffStat = FullTrajectorGeneration.endPointSamplerSummarizeStatisticsOneBt(True, RandomState(int(i * self.dataGenerationRegime.nPairSeq + j)), initialRateMatrix,
                                                                        self.data[j], self.dataGenerationRegime.interLength)
                 nInit = nInit + suffStat['nInit']
                 holdTime = holdTime + suffStat['holdTimes']

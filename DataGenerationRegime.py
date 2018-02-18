@@ -134,7 +134,7 @@ class DataGenerationRegime:
 
     def generatingSeqGivenRateMtxAndBtInterval(self, seqList):
 
-        observedTimePoints = np.arange(0, (self.bt + 1), self.interLength)
+        observedTimePoints = np.arange(0, (self.bt + self.interLength*0.5), self.interLength)
         observedSeqList = FullTrajectorGeneration.getObsArrayAtSameGivenTimes(seqList, observedTimePoints)
         observedAllSequences = observedSeqList[1:observedSeqList.shape[0], :]
 

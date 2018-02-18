@@ -216,14 +216,13 @@ def testLocalBPSForStationaryAndBivariateWeights(data, nMCMCIter = 500, trajecto
 
 
     result = {}
-    result['stationaryWeights'] = stationaryWeightsSamples
     result['stationaryDist'] = stationarySamples
     result['binaryWeights'] = binaryWeightsSamples
     result['exchangeableCoef'] = exchangeableSamples
     return result
 
 
-def testHMCForStationaryAndBivariateWeights(data, nMCMCIter = 500, nLeapFrogSteps=40, stepSize=0.002):
+def testHMCForStationaryAndBivariateWeights(data, nMCMCIter = 500, nLeapFrogSteps=40, stepSize=0.002, nIterPerPath=1000):
     avgNTrans = data['transitCount']
     avgHoldTimes = data['sojourn']
     avgNInit = data['nInit']
@@ -238,19 +237,19 @@ def testHMCForStationaryAndBivariateWeights(data, nMCMCIter = 500, nLeapFrogStep
     hmc = HMC(nLeapFrogSteps, stepSize, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
     sample = np.random.uniform(0, 1, int(nStates + nStates * (nStates - 1) / 2))
     lastSample = sample
-    exchangeableParamSamples = np.zeros((nMCMCIter, int(nStates + nStates * (nStates - 1) / 2)))
-    binaryWeightsSamples = np.zeros((nMCMCIter, int(nStates + nStates * (nStates - 1) / 2)))
+    exchangeableParamSamples = np.zeros((nMCMCIter, int(nStates * (nStates - 1) / 2)))
+    binaryWeightsSamples = np.zeros((nMCMCIter, int(nStates * (nStates - 1) / 2)))
     stationaryDistEstSamples = np.zeros((nMCMCIter, nStates))
     for i in range(nMCMCIter):
 
-        for k in range(1000):
+        for k in range(nIterPerPath):
             hmcResult = hmc.doIter(nLeapFrogSteps, stepSize, lastSample, expectedCompleteReversibleObjective,
                                expectedCompleteReversibleObjective, True)
             lastSample = hmcResult.next_q
 
         sample = lastSample
         initialStationaryWeights = sample[nStates]
-        initialBinaryWeights = sample[nStates:(nStates + int(nStates * (nStates - 1) / 2))]
+        initialBinaryWeights = sample[nStates:int(nStates+(nStates * (nStates - 1) / 2))]
 
 
         newRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, initialStationaryWeights,
@@ -354,15 +353,21 @@ def main():
     bigData['transitCount'][3, :]= np.array((76.4762,  199.1218,   61.6802,    0.  ))
     nStates=4
     bigData['bivariateDictionary'] = getHardCodedDictChainGraph(nStates)
-    result = testLocalBPSForStationaryAndBivariateWeights(bigData, nMCMCIter=3000)
-    np.savetxt(
-        "/Users/crystal/Desktop/binaryWeightsRunningtestLocalBPSForStationaryAndBivariateWeightsForBinaryWeightsSamplers4states.csv",
-        result['binaryWeights'], fmt='%.3f', delimiter=',')
-    np.savetxt(
-        "/Users/crystal/Desktop/binaryWeightsRunningtestLocalBPSForStationaryAndBivariateWeightsForExchangeableCoef4states.csv",
-        result['exchangeableCoef'], fmt='%.3f', delimiter=',')
+    # result = testLocalBPSForStationaryAndBivariateWeights(bigData, nMCMCIter=3000)
+    # np.savetxt(
+    #     "/Users/crystal/Desktop/binaryWeightsRunningtestLocalBPSForStationaryAndBivariateWeightsForBinaryWeightsSamplers4states.csv",
+    #     result['binaryWeights'], fmt='%.3f', delimiter=',')
+    # np.savetxt(
+    #     "/Users/crystal/Desktop/binaryWeightsRunningtestLocalBPSForStationaryAndBivariateWeightsForExchangeableCoef4states.csv",
+    #     result['exchangeableCoef'], fmt='%.3f', delimiter=',')
     ## assignValues to bigData2 like data so that next time, we don't need to run it again
-
+    resultHMC = testHMCForStationaryAndBivariateWeights(bigData, nMCMCIter=3000, nIterPerPath=300)
+    np.savetxt(
+        "/Users/crystal/Desktop/binaryWeightsRunningtestHMCForStationaryAndBivariateWeightsForBinaryWeightsSamplers4states3000.csv",
+        resultHMC['binaryWeights'], fmt='%.3f', delimiter=',')
+    np.savetxt(
+        "/Users/crystal/Desktop/binaryWeightsRunningtestHMCForStationaryAndBivariateWeightsForExchangeableCoef4states3000.csv",
+        resultHMC['exchangeableCoef'], fmt='%.3f', delimiter=',')
 
 
 
