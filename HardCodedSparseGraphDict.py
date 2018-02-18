@@ -1,8 +1,8 @@
 
 import os
 import sys
-sys.path.append("/Users/crystal/Dropbox/rejfreePy_main/")
-os.chdir("/Users/crystal/Dropbox/rejfreePy_main/")
+#sys.path.append("/Users/crystal/Dropbox/rejfreePy_main/")
+#os.chdir("/Users/crystal/Dropbox/rejfreePy_main/")
 import numpy as np
 
 from FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
