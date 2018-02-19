@@ -28,6 +28,7 @@ class EndPointSampler:
         self.uniformizedTransition = self.uniformizedTransitionMtx(rateMtx, self.maxDepartureRate(rateMtx))
         self.sojournWorkArray = np.zeros(10)
         self.transitionWorkArray = np.zeros(rateMtx.shape[0])
+        self.transitionProbMtx = linalg.expm(rateMtx * totalTime)
     
     def sample(self, prng, startState, endState, T, statistics, path):
         """
@@ -126,17 +127,18 @@ class EndPointSampler:
             return the total number of transitions sampled from a truncated 
             Poisson Processes
         """
-        transitionMarginal = linalg.expm(self.rateMtx*totalTime)
-        if np.isclose(transitionMarginal[np.int(initialState), np.int(endState)], 0.0, 1e-08, 1e-10):
+
+        #transitionMarginal = linalg.expm(self.rateMtx*totalTime)
+        if np.isclose(self.transitionProbMtx[np.int(initialState), np.int(endState)], 0.0, 1e-08, 1e-10):
             raise ValueError('The transition probability between the initial and ending state is zero')
-        if np.isclose(transitionMarginal[np.int(initialState), np.int(endState)], 1.0):
+        if np.isclose(self.transitionProbMtx[np.int(initialState), np.int(endState)], 1.0):
             return 0 ## since the probability is 1.0 so that no transitions needed
         
         ## generate a number form Unif[0, 1]
         uniform = prng.uniform(low=0.0, high=1.0, size=1)
         sumResult = 0
         mu = self.maxDepartureRate(self.rateMtx)
-        logConstant = -mu*totalTime- np.log(transitionMarginal[np.int(initialState), np.int(endState)])
+        logConstant = -mu*totalTime- np.log(self.transitionProbMtx[np.int(initialState), np.int(endState)])
         logMuT = np.log(mu*totalTime)
         for i in range(MAX_N_TRANSITION):
             logNum = logConstant + i*logMuT + np.log(self.getUniformizedTransitionPower(i)[np.int(initialState), np.int(endState)])
@@ -161,7 +163,7 @@ class EndPointSampler:
             return the marginal transition probability which is matrix exponential 
             of (rateMtx*totalTime)
         """
-        result = linalg.expm(rateMtx*totalTime)
+        result = linalg.expm(rateMtx * totalTime)
         return result
     
     

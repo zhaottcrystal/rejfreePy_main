@@ -23,13 +23,18 @@ from collections import OrderedDict
 from datetime import datetime
 from numpy.random import RandomState
 import argparse
+import DataGenerationRegime
+import MCMCRunningRegime
+import OptionClasses
+
 
 argv = sys.argv[1:]
 parser = argparse.ArgumentParser()
 parser.add_argument('-nMCMCIter', action='store', dest='nMCMCIter', type=int, default =2000, help = 'store the number of MCMC iterations')
+parser.add_argument('-dir_name', action='store', dest='dir_name', type=str, help='store the directory name to save the csv files')
 results = parser.parse_args()
 nMCMCIters = results.nMCMCIter
-
+dir_name = results.dir_name
 nStates = 6
 ## generate the exchangeable coefficients
 ## set the seed so that we can reproduce generating the
@@ -109,195 +114,195 @@ np.round(trueExchangeCoef, 3)
 bt = 5.0
 nSeq = 5000
 prng = RandomState(seed)
-seqList = generateFullPathUsingRateMtxAndStationaryDist(prng, nSeq, nStates, rateMtx, stationaryDist, bt)
+weightGenerationRegime = DataGenerationRegime.WeightGenerationRegime(nStates = nStates, nBivariateFeat= bivariateFeatIndexDictionary, stationaryWeights=stationaryWeights, bivariateWeights=bivariateWeights)
+dataRegime = DataGenerationRegime.DataGenerationRegime(nStates=nStates,  bivariateFeatIndexDictionary=bivariateFeatIndexDictionary, btLength=bt, nSeq=nSeq, weightGenerationRegime=weightGenerationRegime, prng = prng, interLength=1.0)
+## generate the sequences data
+initialStateSeq = dataRegime.generatingInitialStateSeq()
+seqList = dataRegime.generatingSeq(initialStateSeq)
+suffStat = dataRegime.getSufficientStatFromSeq(seqList)
+firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval(seqList)
+trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
+print(trueRateMtx)
 observedTimePoints = np.arange(0, (bt+1))
-observedSeqList = getObsArrayAtSameGivenTimes(seqList, observedTimePoints)
-observedAllSequences = observedSeqList[1:observedSeqList.shape[0], :]
+
+
+mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter=nMCMCIters, thinning=1.0, burnIn=0, onlyHMC= False, HMCPlusBPS=True,
+                                          nLeapFrogSteps=40, stepSize=0.02, nHMCSamples=1000, saveRateMtx=False, initialSampleSeed=3,
+                                          rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=0.125), dumpResultIteratively=True,dumpResultIterations=5, dir_name=dir_name)
+
+
+mcmcRegimeIteratively.run(initialWeightDist="Normal")
+
 
 # input = summarizeSuffStatUsingEndPoint(seqList, bt, rateMtx)
 
 ## initial guess of the parameters
-newSeed = 3
-np.random.seed(newSeed)
-initialWeights = np.random.normal(0, 1, nStates)
-print("The weights for the initial stationary distirbution are")
-print(initialWeights)
-# [ 1.78862847  0.43650985  0.09649747 -1.8634927  -0.2773882  -0.35475898]
-
-
-initialBinaryWeights = np.random.normal(0, 1, nBivariateFeat)
-print("The initial binary feature weights at 0th iteration are: ")
-print(initialBinaryWeights)
-# The initial binary feature weights at 0th iteration are:
-# [ 0.44122749 -0.33087015  2.43077119 -0.25209213  0.10960984  1.58248112
-#  -0.9092324  -0.59163666  0.18760323 -0.32986996]
-
-## this part of code needs to be removed
-## this is the weight after 30 iterations
-
-#initialBinaryWeights = np.array((1.48536847, -0.46089091, -0.69606627, -0.57947705,  0.27756266 ,-1.29701538,
-#  0.37100701,  0.66824618 , 0.85604406, -0.17161346,  0.31854857, -1.89228419))
-#initialWeights = stationaryWeights
-
-### get the rate matrix with initialWeights for the stationary distribution combined with the true binary weights
-#RateMtxWithFixedCoef = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, initialWeights, bivariateWeights, bivariateFeatIndexDictionary)
-#initialRateMtx = RateMtxWithFixedCoef
-initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, initialWeights, initialBinaryWeights, bivariateFeatIndexDictionary)
-initialStationaryDist = initialRateMtx.getStationaryDist()
-print("The initial stationary distribution is ")
-print(initialStationaryDist)
-
-initialRateMatrix = initialRateMtx.getRateMtx()
-print("The initial exchangeable parameters at 0th iteration are")
-initialExchangeCoef = initialRateMtx.getExchangeCoef()
-print(initialExchangeCoef)
-
-
-print("The initialRateMtx is")
-print(initialRateMatrix)
-
-## obtain the sufficient statistics based on the current values of the parameters and perform MCMC sampling scheme
-nMCMCIters = mcmcOptions.nMCMCSweeps
-thinningPeriod = MCMCOptions().thinningPeriod
-burnIn = MCMCOptions().burnIn
-
-stationarySamples = np.zeros((nMCMCIters, nStates))
-stationaryWeightsSamples = np.zeros((nMCMCIters, nStates))
-binaryWeightsSamples = np.zeros((nMCMCIters, nBivariateFeat))
-exchangeableSamples = np.zeros((nMCMCIters, len(initialExchangeCoef)))
-
-# to debug code, set nMCMCIters=1 temporarily
-nMCMCIters= nMCMCIters
-
-firstLastStatesArrayAll = list()
-nPairSeq = int(len(observedTimePoints)-1)
-
-for i in range(nPairSeq):
-    pairSeq = observedAllSequences[:, i:(i+2)]
-    firstLastStatesArrayAll.append(pairSeq)
-
-#After 130th iteration
-#The initial estimates of the binary weights are:
-#[ 1.47329104 -0.49679277 -0.51178121 -0.4536991   0.37707951 -1.75517446
-#  1.50458647 -0.69647191  0.32232739 -0.1699001   1.16512585 -1.68608641]
-#The initial stationary distribution is
-#[ 0.172  0.253  0.074  0.278  0.103  0.12 ]
-#The initial estimates of the exchangeable parameters are:
-#[ 2.655  1.592  0.365  2.616  0.926  0.16   0.11   0.252  2.244  3.097
-#  0.688  6.215  2.705  0.156  0.594]
-#[[-1.272  0.672  0.117  0.101  0.27   0.112]
-# [ 0.457 -0.796  0.012  0.03   0.026  0.27 ]
-# [ 0.274  0.041 -1.994  0.86   0.071  0.749]
-# [ 0.063  0.028  0.228 -0.617  0.279  0.019]
-# [ 0.45   0.064  0.051  0.751 -1.387  0.072]
-# [ 0.159  0.568  0.458  0.043  0.061 -1.289]]
-    
-# [ 0.172  0.253  0.074  0.278  0.103  0.12 ]
-
-
-
-## create a three dimensional array to save the rate matrix elements
-rateMatrixSamples = np.zeros((nMCMCIters, nStates, nStates))
-
-
-startTime = datetime.now()
-print(startTime)
-
-for i in range(nMCMCIters):
-
-    # save the samples of the parameters
-    stationarySamples[i, :] = initialStationaryDist
-    binaryWeightsSamples[i, :] = initialBinaryWeights
-    exchangeableSamples[i, :] = initialExchangeCoef
-    #rateMatrixSamples[i, :, :] = initialRateMatrix
-    stationaryWeightsSamples[i, :] = initialWeights
-
-    # use endpointSampler to collect sufficient statistics of the ctmc given the current values of the parameters
-    # suffStat = summarizeSuffStatUsingEndPoint(seqList, bt, initialRateMatrix)
-    #
-    # # get each sufficient statistics element
-    # nInit = suffStat['nInit']
-    # holdTime = suffStat['holdTimes']
-    # nTrans = suffStat['nTrans']
-
-    nInit = np.zeros(nStates)
-    holdTime = np.zeros(nStates)
-    nTrans = np.zeros((nStates, nStates))
-
-    for j in range(nPairSeq):
-        suffStat = endPointSamplerSummarizeStatisticsOneBt(True, RandomState(j), initialRateMatrix, firstLastStatesArrayAll[j], 1.0)
-        nInit = nInit + suffStat['nInit']
-        holdTime = holdTime + suffStat['holdTimes']
-        nTrans = nTrans + suffStat['nTrans']
-
-
-    # construct expected complete reversible model objective
-    expectedCompleteReversibleObjective = ExpectedCompleteReversibleObjective(holdTime, nInit, nTrans, 1.0, initialExchangeCoef)
-
-    # sample stationary distribution elements using HMC
-    hmc = HMC(40, 0.02, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
-    sample = np.random.uniform(0, 1, nStates)
-    samples = hmc.run(0, 2000, sample)
-    avgWeights = np.sum(samples, axis=0) / samples.shape[0]
-    initialWeights = avgWeights
-    stationaryDistEst = np.exp(avgWeights) / np.sum(np.exp(avgWeights))
-    # update stationary distribution elements to the latest value
-    initialStationaryDist = stationaryDistEst
-
-    # sample exchangeable coefficients using local bouncy particle sampler
-    ## define the model
-    model = ExpectedCompleteReversibleModelWithBinaryFactors(expectedCompleteReversibleObjective, nStates, initialBinaryWeights, initialStationaryDist, bivariateFeatIndexDictionary)
-
-    ## define the sampler to use
-    ## local sampler to use
-    #allFactors = model.localFactors
-    localSampler = LocalRFSamplerForBinaryWeights(model, rfOptions, mcmcOptions, nStates, bivariateFeatIndexDictionary)
-    ####### below is the older version of the sampler
-    phyloLocalRFMove = PhyloLocalRFMove(model, localSampler, initialBinaryWeights, options=rfOptions, prng=RandomState(i))
-    initialBinaryWeights = phyloLocalRFMove.execute()
-    #print("The initial estimates of the binary weights are:")
-    #print(initialBinaryWeights)
-
-    #localSamplerOld = LocalRFSamplerForBinaryWeightsOldVersion(model, rfOptions, mcmcOptions, nStates,
-    #                                                          bivariateFeatIndexDictionary)
-    #phyloLocalRFMove = PhyloLocalRFMove(seed, model, localSamplerOld, initialBinaryWeights)
-    #initialBinaryWeightsOld = phyloLocalRFMove.execute()
-
-    initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, initialWeights, initialBinaryWeights,
-                                                              bivariateFeatIndexDictionary)
-
-    initialStationaryDist = initialRateMtx.getStationaryDist()
-    initialRateMatrix = initialRateMtx.getRateMtx()
-    initialExchangeCoef = initialRateMtx.getExchangeCoef()
-    print(i)
-    print(initialExchangeCoef)
-
-endTime = datetime.now()
-timeElapsed = 'Duration: {}'.format(endTime - startTime)
-print("The elapsed time interval is ")
-print(timeElapsed)
-# 21:10:49.600034
-
-download_dir = "timeElapsed.csv" #where you want the file to be downloaded to
-csv = open(download_dir, "w")
-#"w" indicates that you're writing strings to the file
-columnTitleRow = "elapsedTime\n"
-csv.write(columnTitleRow)
-row = timeElapsed
-csv.write(str(row))
-csv.close()
-
-
-stationaryDistName = "stationaryDistlbps" + str(nMCMCIters) + ".csv"
-stationaryWeightsName = "stationaryWeightlbps" + str(nMCMCIters) +".csv"
-exchangeableCoefName = "exchangeableParameterslbps" + str(nMCMCIters) +".csv"
-binaryWeightsName = "binaryWeightslbps" + str(nMCMCIters) +".csv"
-np.savetxt(stationaryDistName, stationarySamples, fmt='%.3f', delimiter=',')
-np.savetxt(stationaryWeightsName, stationaryWeightsSamples, fmt='%.3f', delimiter=',')
-np.savetxt(exchangeableCoefName, exchangeableSamples, fmt='%.3f', delimiter=',')
-np.savetxt(binaryWeightsName, binaryWeightsSamples, fmt='%.3f', delimiter=',')
-#np.save('3dsavelbps2000.npy', rateMatrixSamples)
-
+# newSeed = 3
+# np.random.seed(newSeed)
+# initialWeights = np.random.normal(0, 1, nStates)
+# print("The weights for the initial stationary distirbution are")
+# print(initialWeights)
+# # [ 1.78862847  0.43650985  0.09649747 -1.8634927  -0.2773882  -0.35475898]
+#
+#
+# initialBinaryWeights = np.random.normal(0, 1, nBivariateFeat)
+# print("The initial binary feature weights at 0th iteration are: ")
+# print(initialBinaryWeights)
+#
+# ### get the rate matrix with initialWeights for the stationary distribution combined with the true binary weights
+# #RateMtxWithFixedCoef = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, initialWeights, bivariateWeights, bivariateFeatIndexDictionary)
+# #initialRateMtx = RateMtxWithFixedCoef
+# initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, initialWeights, initialBinaryWeights, bivariateFeatIndexDictionary)
+# initialStationaryDist = initialRateMtx.getStationaryDist()
+# print("The initial stationary distribution is ")
+# print(initialStationaryDist)
+#
+# initialRateMatrix = initialRateMtx.getRateMtx()
+# print("The initial exchangeable parameters at 0th iteration are")
+# initialExchangeCoef = initialRateMtx.getExchangeCoef()
+# print(initialExchangeCoef)
+#
+#
+# print("The initialRateMtx is")
+# print(initialRateMatrix)
+#
+# ## obtain the sufficient statistics based on the current values of the parameters and perform MCMC sampling scheme
+# nMCMCIters = mcmcOptions.nMCMCSweeps
+# thinningPeriod = MCMCOptions().thinningPeriod
+# burnIn = MCMCOptions().burnIn
+#
+# stationarySamples = np.zeros((nMCMCIters, nStates))
+# stationaryWeightsSamples = np.zeros((nMCMCIters, nStates))
+# binaryWeightsSamples = np.zeros((nMCMCIters, nBivariateFeat))
+# exchangeableSamples = np.zeros((nMCMCIters, len(initialExchangeCoef)))
+#
+# # to debug code, set nMCMCIters=1 temporarily
+# nMCMCIters= nMCMCIters
+#
+# nPairSeq = int(len(observedTimePoints)-1)
+#
+# #After 130th iteration
+# #The initial estimates of the binary weights are:
+# #[ 1.47329104 -0.49679277 -0.51178121 -0.4536991   0.37707951 -1.75517446
+# #  1.50458647 -0.69647191  0.32232739 -0.1699001   1.16512585 -1.68608641]
+# #The initial stationary distribution is
+# #[ 0.172  0.253  0.074  0.278  0.103  0.12 ]
+# #The initial estimates of the exchangeable parameters are:
+# #[ 2.655  1.592  0.365  2.616  0.926  0.16   0.11   0.252  2.244  3.097
+# #  0.688  6.215  2.705  0.156  0.594]
+# #[[-1.272  0.672  0.117  0.101  0.27   0.112]
+# # [ 0.457 -0.796  0.012  0.03   0.026  0.27 ]
+# # [ 0.274  0.041 -1.994  0.86   0.071  0.749]
+# # [ 0.063  0.028  0.228 -0.617  0.279  0.019]
+# # [ 0.45   0.064  0.051  0.751 -1.387  0.072]
+# # [ 0.159  0.568  0.458  0.043  0.061 -1.289]]
+#
+# # [ 0.172  0.253  0.074  0.278  0.103  0.12 ]
+#
+#
+#
+# ## create a three dimensional array to save the rate matrix elements
+# rateMatrixSamples = np.zeros((nMCMCIters, nStates, nStates))
+#
+#
+# startTime = datetime.now()
+# print(startTime)
+#
+# for i in range(nMCMCIters):
+#
+#     # save the samples of the parameters
+#     stationarySamples[i, :] = initialStationaryDist
+#     binaryWeightsSamples[i, :] = initialBinaryWeights
+#     exchangeableSamples[i, :] = initialExchangeCoef
+#     #rateMatrixSamples[i, :, :] = initialRateMatrix
+#     stationaryWeightsSamples[i, :] = initialWeights
+#
+#     # use endpointSampler to collect sufficient statistics of the ctmc given the current values of the parameters
+#     # suffStat = summarizeSuffStatUsingEndPoint(seqList, bt, initialRateMatrix)
+#     #
+#     # # get each sufficient statistics element
+#     # nInit = suffStat['nInit']
+#     # holdTime = suffStat['holdTimes']
+#     # nTrans = suffStat['nTrans']
+#
+#     nInit = np.zeros(nStates)
+#     holdTime = np.zeros(nStates)
+#     nTrans = np.zeros((nStates, nStates))
+#
+#     for j in range(nPairSeq):
+#         suffStat = endPointSamplerSummarizeStatisticsOneBt(True, RandomState(int(i * nPairSeq+j)), initialRateMatrix, firstLastStatesArrayAll[j], 1.0)
+#         nInit = nInit + suffStat['nInit']
+#         holdTime = holdTime + suffStat['holdTimes']
+#         nTrans = nTrans + suffStat['nTrans']
+#
+#
+#     # construct expected complete reversible model objective
+#     expectedCompleteReversibleObjective = ExpectedCompleteReversibleObjective(holdTime, nInit, nTrans, 1.0, initialExchangeCoef)
+#
+#     # sample stationary distribution elements using HMC
+#     hmc = HMC(40, 0.02, expectedCompleteReversibleObjective, expectedCompleteReversibleObjective)
+#     sample = np.random.uniform(0, 1, nStates)
+#     samples = hmc.run(0, 2000, sample)
+#     avgWeights = np.sum(samples, axis=0) / samples.shape[0]
+#     initialWeights = avgWeights
+#     stationaryDistEst = np.exp(avgWeights) / np.sum(np.exp(avgWeights))
+#     # update stationary distribution elements to the latest value
+#     initialStationaryDist = stationaryDistEst
+#
+#     # sample exchangeable coefficients using local bouncy particle sampler
+#     ## define the model
+#     model = ExpectedCompleteReversibleModelWithBinaryFactors(expectedCompleteReversibleObjective, nStates, initialBinaryWeights, initialStationaryDist, bivariateFeatIndexDictionary)
+#
+#     ## define the sampler to use
+#     ## local sampler to use
+#     #allFactors = model.localFactors
+#     localSampler = LocalRFSamplerForBinaryWeights(model, rfOptions, mcmcOptions, nStates, bivariateFeatIndexDictionary)
+#     ####### below is the older version of the sampler
+#     phyloLocalRFMove = PhyloLocalRFMove(model, localSampler, initialBinaryWeights, options=rfOptions, prng=RandomState(i))
+#     initialBinaryWeights = phyloLocalRFMove.execute()
+#     #print("The initial estimates of the binary weights are:")
+#     #print(initialBinaryWeights)
+#
+#     #localSamplerOld = LocalRFSamplerForBinaryWeightsOldVersion(model, rfOptions, mcmcOptions, nStates,
+#     #                                                          bivariateFeatIndexDictionary)
+#     #phyloLocalRFMove = PhyloLocalRFMove(seed, model, localSamplerOld, initialBinaryWeights)
+#     #initialBinaryWeightsOld = phyloLocalRFMove.execute()
+#
+#     initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, initialWeights, initialBinaryWeights,
+#                                                               bivariateFeatIndexDictionary)
+#
+#     initialStationaryDist = initialRateMtx.getStationaryDist()
+#     initialRateMatrix = initialRateMtx.getRateMtx()
+#     initialExchangeCoef = initialRateMtx.getExchangeCoef()
+#     print(i)
+#     print(initialExchangeCoef)
+#
+# endTime = datetime.now()
+# timeElapsed = 'Duration: {}'.format(endTime - startTime)
+# print("The elapsed time interval is ")
+# print(timeElapsed)
+# # 21:10:49.600034
+#
+# download_dir = "timeElapsed.csv" #where you want the file to be downloaded to
+# csv = open(download_dir, "w")
+# #"w" indicates that you're writing strings to the file
+# columnTitleRow = "elapsedTime\n"
+# csv.write(columnTitleRow)
+# row = timeElapsed
+# csv.write(str(row))
+# csv.close()
+#
+#
+# stationaryDistName = "stationaryDistlbps" + str(nMCMCIters) + ".csv"
+# stationaryWeightsName = "stationaryWeightlbps" + str(nMCMCIters) +".csv"
+# exchangeableCoefName = "exchangeableParameterslbps" + str(nMCMCIters) +".csv"
+# binaryWeightsName = "binaryWeightslbps" + str(nMCMCIters) +".csv"
+# np.savetxt(stationaryDistName, stationarySamples, fmt='%.3f', delimiter=',')
+# np.savetxt(stationaryWeightsName, stationaryWeightsSamples, fmt='%.3f', delimiter=',')
+# np.savetxt(exchangeableCoefName, exchangeableSamples, fmt='%.3f', delimiter=',')
+# np.savetxt(binaryWeightsName, binaryWeightsSamples, fmt='%.3f', delimiter=',')
+# #np.save('3dsavelbps2000.npy', rateMatrixSamples)
+#
 
 
 

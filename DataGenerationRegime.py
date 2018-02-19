@@ -15,7 +15,7 @@ import warnings
 defaultSeed = 1234567890
 
 class WeightGenerationRegime:
-    def __init__(self, nStates, nBivariateFeat, prng=None, seed=None):
+    def __init__(self, nStates, nBivariateFeat, prng=None, seed=None, stationaryWeights=None, bivariateWeights=None):
         self.nStates = nStates
         self.nBivariateFeat = nBivariateFeat
         if prng is not None:
@@ -30,8 +30,8 @@ class WeightGenerationRegime:
         if prng is not None and seed is not None:
             warnings.warn("both prng and seed are provided but we use the provided prng", DeprecationWarning)
 
-        self.stationaryWeights = None
-        self.bivariateWeights = None
+        self.stationaryWeights = stationaryWeights
+        self.bivariateWeights = bivariateWeights
 
 
     def generateStationaryWeightsFromNormal(self):

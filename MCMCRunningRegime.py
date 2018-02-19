@@ -391,6 +391,8 @@ class MCMCRunningRegime:
         stationaryWeightsStr = "stationaryWeights"
         exchangeableCoefStr = "exchangeableCoef"
         binaryWeightsStr = "binaryWeights"
+
+        rateMtxStrName = "rateMatrix"
         if saveRateMtx:
             rateMtxStr = "rateMatrix"
             rateMtxStrName = rateMtxStr + samplingMethod + samplingMethod + nMCMCIter
