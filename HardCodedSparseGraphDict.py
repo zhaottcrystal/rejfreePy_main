@@ -128,7 +128,7 @@ observedTimePoints = np.arange(0, (bt+1))
 
 mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter=nMCMCIters, thinning=1.0, burnIn=0, onlyHMC= False, HMCPlusBPS=True,
                                           nLeapFrogSteps=40, stepSize=0.02, nHMCSamples=1000, saveRateMtx=False, initialSampleSeed=3,
-                                          rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=0.125), dumpResultIteratively=True,dumpResultIterations=5, dir_name=dir_name)
+                                          rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=0.125), dumpResultIteratively=True,dumpResultIterations=10, dir_name=dir_name)
 
 
 mcmcRegimeIteratively.run(initialWeightDist="Normal")
