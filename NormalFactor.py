@@ -43,11 +43,12 @@ class NormalFactor(CollisionFactor.CollisionFactor):
 
         x = self.variables[self.gradientIndex]
 
-        vv = v * v
-        xv = x * v
+        vv = np.dot(v, v)
+        xv = np.dot(x, v)
 
         ## generate random number c, where c = -Math.log(V ~ unif(0, 1))
-        c = -np.log(collisionContext.prng.uniform(0, 1, 1)[0])
+        # c = -np.log(collisionContext.prng.uniform(0, 1, 1)[0])
+        c = -np.log(np.random.uniform(0, 1, 1)[0])
 
         t = self.normalCollisionTime(c, xv, vv)
 

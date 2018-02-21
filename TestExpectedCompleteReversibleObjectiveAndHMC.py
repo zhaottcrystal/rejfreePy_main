@@ -1,7 +1,7 @@
 import sys
 #sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 import os
-#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
+#os.chdir("/Users/crystal/Dropbox/rejfreePy_main/")
 
 from ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
 from HMC import HMC
@@ -353,13 +353,13 @@ def main():
     bigData['transitCount'][3, :]= np.array((76.4762,  199.1218,   61.6802,    0.  ))
     nStates=4
     bigData['bivariateDictionary'] = getHardCodedDictChainGraph(nStates)
-    # result = testLocalBPSForStationaryAndBivariateWeights(bigData, nMCMCIter=3000)
-    # np.savetxt(
-    #     "/Users/crystal/Desktop/binaryWeightsRunningtestLocalBPSForStationaryAndBivariateWeightsForBinaryWeightsSamplers4states.csv",
-    #     result['binaryWeights'], fmt='%.3f', delimiter=',')
-    # np.savetxt(
-    #     "/Users/crystal/Desktop/binaryWeightsRunningtestLocalBPSForStationaryAndBivariateWeightsForExchangeableCoef4states.csv",
-    #     result['exchangeableCoef'], fmt='%.3f', delimiter=',')
+    result = testLocalBPSForStationaryAndBivariateWeights(bigData, nMCMCIter=3000)
+    np.savetxt(
+         "/Users/crystal/Desktop/binaryWeightsRunningtestLocalBPSForStationaryAndBivariateWeightsForBinaryWeightsSamplers4states.csv",
+        result['binaryWeights'], fmt='%.3f', delimiter=',')
+    np.savetxt(
+         "/Users/crystal/Desktop/binaryWeightsRunningtestLocalBPSForStationaryAndBivariateWeightsForExchangeableCoef4states.csv",
+        result['exchangeableCoef'], fmt='%.3f', delimiter=',')
     ## assignValues to bigData2 like data so that next time, we don't need to run it again
     resultHMC = testHMCForStationaryAndBivariateWeights(bigData, nMCMCIter=3000, nIterPerPath=300)
     np.savetxt(

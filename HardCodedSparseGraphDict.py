@@ -131,7 +131,7 @@ mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIte
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=0.125), dumpResultIteratively=True,dumpResultIterations=10, dir_name=dir_name)
 
 
-mcmcRegimeIteratively.run(initialWeightDist="Normal")
+mcmcRegimeIteratively.run()
 
 
 # input = summarizeSuffStatUsingEndPoint(seqList, bt, rateMtx)

@@ -384,7 +384,8 @@ class LocalRFSamplerForBinaryWeights:
         ## sample a factor
         allFactors = self.allFactors
         ## sample the index of the factor
-        ind = int(np.asscalar(prng.randint(0, len(np.atleast_1d(allFactors)), 1)))
+        #ind = int(np.asscalar(prng.randint(0, len(np.atleast_1d(allFactors)), 1)))
+        ind = int(np.asscalar(np.random.randint(0, len(np.atleast_1d(allFactors)), 1)))
         f = allFactors[ind]  ## f is a collision factor
 
         ## using the cached results for all factors
@@ -394,7 +395,8 @@ class LocalRFSamplerForBinaryWeights:
             increasedNeighborhood = set()
             increasedNeighborhood.update(immediateNeighborVariablesIndex)
 
-            f2 = allFactors[int(np.asscalar(prng.randint(0, len(allFactors), 1)))]
+            #f2 = allFactors[int(np.asscalar(prng.randint(0, len(allFactors), 1)))]
+            f2 = allFactors[int(np.asscalar(np.random.randint(0, len(allFactors), 1)))]
             immediateNeighborVariablesIndex2 = self.neighborVariablesForAllFactors[f2]
 
             increasedNeighborhood.update(immediateNeighborVariablesIndex2)
@@ -428,7 +430,8 @@ class LocalRFSamplerForBinaryWeights:
         self.nRefreshedVariables += len(np.atleast_1d(immediateNeighborVariablesIndex))
 
         ## sample new velocity vector
-        newVelocity = prng.normal(size=len(np.atleast_1d(immediateNeighborVariablesIndex)))
+        #newVelocity = prng.normal(size=len(np.atleast_1d(immediateNeighborVariablesIndex)))
+        newVelocity = np.random.normal(size=len(np.atleast_1d(immediateNeighborVariablesIndex)))
         if len(np.atleast_1d(immediateNeighborVariablesIndex))==1:
             newVelocity = np.array([newVelocity])
 
@@ -475,10 +478,12 @@ class LocalRFSamplerForBinaryWeights:
             if self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.RESTRICTED:
                 newVelocity = Utils.uniformOnUnitBall(prng, dimensionality)
             else:
-                newVelocity = prng.normal(0, 1, dimensionality)
+                #newVelocity = prng.normal(0, 1, dimensionality)
+                newVelocity = np.random.normal(0, 1, dimensionality)
         else:
             if self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.GLOBAL or self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.LOCAL:
-                newVelocity = prng.normal(0, 1, dimensionality)
+                #newVelocity = prng.normal(0, 1, dimensionality)
+                newVelocity = np.random.normal(0, 1, dimensionality)
             elif self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.RESTRICTED:
                 newVelocity = Utils.uniformOnUnitBall(prng, dimensionality)
             elif self.rfOptions.refreshmentMethod == OptionClasses.RefreshmentMethod.PARTIAL:
@@ -562,7 +567,8 @@ class LocalRFSamplerForBinaryWeights:
                     self.localVelocityRefreshment(prng, nextRefreshmentTimeCopy)
                 else:
                     self.globalVelocityRefreshment(prng, nextRefreshmentTimeCopy, False)
-                nextRefreshmentTime += prng.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
+                nextRefreshmentTime += np.random.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
+                #nextRefreshmentTime += prng.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
             #print(self.currentTime)
             print(i)
 
@@ -571,12 +577,6 @@ class LocalRFSamplerForBinaryWeights:
         for index, var in enumerate(self.model.variables):
             #oldKey = self.model.variables[index]
             self.model.variables[index] = self.updateVariable(index, self.currentTime)
-            #newKey = self.model.variables[index]
-            #if newKey != oldKey:
-            #    ## TODO: figure out when we need to update the time and the positon of the trajectory ray
-            #    self.trajectories[index].position_t = self.model.variables[index]
-            #    self.trajectories[index].t = self.currentTime
-
 
         # Ensure that the remaining rays are processed
         self.globalVelocityRefreshment(prng, self.currentTime, False)

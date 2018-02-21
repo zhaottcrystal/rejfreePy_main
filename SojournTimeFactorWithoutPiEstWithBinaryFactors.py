@@ -52,7 +52,8 @@ class SojournTimeFactorWithoutPiEstWithBinaryFactors(CollisionFactor.CollisionFa
 
         else:
             ## generate random number c, where c = -Math.log(V ~ unif(0, 1))
-            c = -np.log(collisionContext.prng.uniform(0, 1, 1)[0])
+            # c = -np.log(collisionContext.prng.uniform(0, 1, 1)[0])
+            c = - np.log(np.random.uniform(0, 1, 1)[0])
 
             term1 = 1 / np.dot(v, self.phi)
 
@@ -88,7 +89,7 @@ class SojournTimeFactorWithoutPiEstWithBinaryFactors(CollisionFactor.CollisionFa
 
     def valueAt(self, x):
         # this returns the energy value or the negative log density value of the function
-        result = 0
+        result = -self.logDensity()
         return result
 
     def derivativeAt(self, x):
@@ -103,7 +104,7 @@ class SojournTimeFactorWithoutPiEstWithBinaryFactors(CollisionFactor.CollisionFa
 
     def nVariables(self):
         """Get the dimension of the parameters"""
-        return len(self.nVariables)
+        return len(self.variables)
 
     def setPosition(self, position):
         """Set the position of the variables"""

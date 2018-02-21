@@ -32,7 +32,7 @@ class MCMCRunningRegime:
 
     def __init__(self, dataGenerationRegime, nMCMCIter, thinning, burnIn, onlyHMC, HMCPlusBPS, prng=None, nLeapFrogSteps=40,
                  stepSize=0.02, nHMCSamples=2000, saveRateMtx = False, initialSampleSeed=None, rfOptions=None,
-                 dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000):
+                 dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000, initialSampleDist="Fixed"):
         if prng is None:
             self.prng = dataGenerationRegime.prng
         else:
@@ -83,6 +83,8 @@ class MCMCRunningRegime:
         self.saveRateMtx = saveRateMtx
         self.dir_name = dir_name
         self.nItersPerPathAuxVar = nItersPerPathAuxVar
+        self.initialWeightDist = "Fixed"
+
 
     def generateFixedInitialWeights(self):
 
@@ -204,12 +206,12 @@ class MCMCRunningRegime:
         return result
 
 
-    def run(self, initialWeightDist ="Fixed", uniWeightsValues=None, biWeightsValues=None):
+    def run(self,  uniWeightsValues=None, biWeightsValues=None):
         ## output the true stationary distribution and exchangeable parameters
         self.outputTrueParameters(self.dir_name)
 
         # call methods to create initial samples
-        initialSamples = self.generateInitialSamples(initialWeightsDist=initialWeightDist, uniWeightsValues=uniWeightsValues, biWeightsValues=biWeightsValues)
+        initialSamples = self.generateInitialSamples(initialWeightsDist=self.initialWeightDist, uniWeightsValues=uniWeightsValues, biWeightsValues=biWeightsValues)
         # decompose the initial samples
         initialStationaryWeights = initialSamples['initialStationaryWeights']
         initialStationaryDist = initialSamples['initialStationaryDist']
@@ -266,7 +268,7 @@ class MCMCRunningRegime:
                 #                                                                           self.data[j],
                 #                                                                           self.dataGenerationRegime.interLength)
 
-                suffStat = FullTrajectorGeneration.endPointSamplerSummarizeStatisticsOneBt(True, RandomState(int(i * self.dataGenerationRegime.nPairSeq + j)), initialRateMatrix,
+                suffStat = FullTrajectorGeneration.endPointSamplerSummarizeStatisticsOneBt(True, RandomState(int(i * self.dataGenerationRegime.nSeq + j)), initialRateMatrix,
                                                                        self.data[j], self.dataGenerationRegime.interLength)
                 nInit = nInit + suffStat['nInit']
                 holdTime = holdTime + suffStat['holdTimes']
@@ -395,12 +397,12 @@ class MCMCRunningRegime:
         rateMtxStrName = "rateMatrix"
         if saveRateMtx:
             rateMtxStr = "rateMatrix"
-            rateMtxStrName = rateMtxStr + samplingMethod + samplingMethod + nMCMCIter
+            rateMtxStrName = rateMtxStr + samplingMethod + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
 
-        stationaryDistStrName = stationaryDistStr + samplingMethod + nMCMCIter
-        stationaryWeightsStrName = stationaryWeightsStr + samplingMethod + nMCMCIter
-        exchangeableCoefStrName = exchangeableCoefStr + samplingMethod + nMCMCIter
-        binaryWeightsStrName = binaryWeightsStr + samplingMethod + nMCMCIter
+        stationaryDistStrName = stationaryDistStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
+        stationaryWeightsStrName = stationaryWeightsStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
+        exchangeableCoefStrName = exchangeableCoefStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
+        binaryWeightsStrName = binaryWeightsStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
 
         if self.dataGenerationRegime.nSeq is not None:
             stationaryDistStrName = stationaryDistStrName + "nSeq" + str(self.dataGenerationRegime.nSeq)

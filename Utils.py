@@ -6,6 +6,8 @@ Created on Sat Mar  4 13:49:35 2017
 @author: crystal
 """
 
+import numpy as np
+
 import sys
 
 import numpy as np
@@ -579,7 +581,8 @@ def neighborVariables(nStates, isRestricted, collisionFactors):
                  
 ## provide several functions to simulate the velocities from different refreshement methods
 def uniformOnUnitBall(prng,dimension):
-    random = prng.normal(0, 1, dimension)
+    #random = prng.normal(0, 1, dimension)
+    random = np.random.normal(0, 1, dimension)
     norm = LA.norm(random)
     random = random/norm
     return random

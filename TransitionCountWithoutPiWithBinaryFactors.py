@@ -58,8 +58,8 @@ class TransitionCountFactorWithoutPiEstWithBinaryFactors(CollisionFactor.Collisi
 
         else:
             ## generate random number c, where c = -Math.log(V ~ unif(0, 1))
-            c = -np.log(collisionContext.prng.uniform(0, 1, 1)[0])
-
+            # c = -np.log(collisionContext.prng.uniform(0, 1, 1)[0])
+            c = -np.log(np.random.uniform(0, 1, 1)[0])
             t = -c / (self.transitCount * np.dot(v, self.phi))
 
             ## using numerical solver to check if the solution from a numerical solver is close to the theoretical form
