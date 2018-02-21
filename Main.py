@@ -64,6 +64,7 @@ parser.add_argument('-initialSamplesGenerateMethod', action='store', dest='initi
 parser.add_argument('-univariateWeights', action='store', dest='uniWeights', help = 'store the univariate weights for the stationary distribution')
 ## add the initial bivariate weights if we would like to provide initial weights
 parser.add_argument('-bivariateWeights', action='store', dest='biWeights', help = 'store the bivariate weights for the exchangeable parameters')
+parser.add_argument('-refreshmentMethod', action='store', dest='refreshmentMethod', default= "LOCAL", type=OptionClasses.RefreshmentMethod.from_string, choices=list(OptionClasses.RefreshmentMethod))
 
 
 results = parser.parse_args()
@@ -79,6 +80,7 @@ initialSampleSeed = results.initialSampleSeed
 interLength= results.interLength
 nHMCSamples = results.nHMCSamples
 dumpResultIterations = results.dumpResultIterations
+refreshmentMethod = results.refreshmentMethod
 
         #np.fromstring(results.biWeights, dtype=float, sep=',')
 
@@ -137,7 +139,7 @@ trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
 
 mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter, thinning=1.0, burnIn=0, onlyHMC= results.onlyHMC, HMCPlusBPS=results.HMCPlusBPS,
                                           nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize, nHMCSamples=nHMCSamples, saveRateMtx=False, initialSampleSeed=initialSampleSeed,
-                                          rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength), dumpResultIteratively=True,
+                                          rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength, refreshmentMethod=refreshmentMethod), dumpResultIteratively=True,
                                                             dumpResultIterations=dumpResultIterations, dir_name=dir_name)
 if initialWeightsDist is not None:
     if initialWeightsDist == "AssignedWeightsValues":

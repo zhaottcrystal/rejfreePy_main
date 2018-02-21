@@ -15,6 +15,17 @@ class RefreshmentMethod(Enum):
      RESTRICTED = 3
      PARTIAL = 4
 
+     def __str__(self):
+         return self.name
+
+     @staticmethod
+     def from_string(s):
+         try:
+             return RefreshmentMethod[s]
+         except KeyError:
+             raise ValueError()
+
+
 
 class RFSamplerOptions:
     def __init__(self, refreshRate=100, refreshmentMethod=RefreshmentMethod.LOCAL, alpha=1.0, beta=4.0, trajectoryLength=1.0, maxSteps= 1000000 ):

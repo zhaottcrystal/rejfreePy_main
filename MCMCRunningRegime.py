@@ -32,7 +32,7 @@ class MCMCRunningRegime:
 
     def __init__(self, dataGenerationRegime, nMCMCIter, thinning, burnIn, onlyHMC, HMCPlusBPS, prng=None, nLeapFrogSteps=40,
                  stepSize=0.02, nHMCSamples=2000, saveRateMtx = False, initialSampleSeed=None, rfOptions=None,
-                 dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000, initialSampleDist="Fixed"):
+                 dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000, initialSampleDist="Fixed", refreshmentMethod= OptionClasses.RefreshmentMethod.LOCAL):
         if prng is None:
             self.prng = dataGenerationRegime.prng
         else:
@@ -84,6 +84,7 @@ class MCMCRunningRegime:
         self.dir_name = dir_name
         self.nItersPerPathAuxVar = nItersPerPathAuxVar
         self.initialWeightDist = "Fixed"
+        self.refreshmentMethod = refreshmentMethod
 
 
     def generateFixedInitialWeights(self):
@@ -365,7 +366,7 @@ class MCMCRunningRegime:
             nMCMCIter= str(nMCMCIter)
         timeStr = time_base_filename+samplingMethod+nMCMCIter+str(self.nStates)
         if self.samplingMethod == "HMCPlusBPS":
-            timeStr = timeStr + "trajectoryLength" + str(self.trajectoryLength)
+            timeStr = timeStr + "trajectoryLength" + str(self.trajectoryLength) + "refreshementMethod" + self.refreshmentMethod.name
         else:
             timeStr = timeStr + "stepSize" + str(self.stepSize) + "nLeapFrogSteps" + str(self.nLeapFrogSteps)
 
@@ -403,6 +404,17 @@ class MCMCRunningRegime:
         stationaryWeightsStrName = stationaryWeightsStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
         exchangeableCoefStrName = exchangeableCoefStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
         binaryWeightsStrName = binaryWeightsStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
+
+        if self.HMCPlusBPS:
+            if saveRateMtx:
+                rateMtxStr = "rateMatrix"
+                rateMtxStrName = rateMtxStr + samplingMethod + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist + self.refreshmentMethod.name
+
+            stationaryDistStrName = stationaryDistStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist + self.refreshmentMethod.name
+            stationaryWeightsStrName = stationaryWeightsStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist + self.refreshmentMethod.name
+            exchangeableCoefStrName = exchangeableCoefStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist + self.refreshmentMethod.name
+            binaryWeightsStrName = binaryWeightsStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist + self.refreshmentMethod.name
+
 
         if self.dataGenerationRegime.nSeq is not None:
             stationaryDistStrName = stationaryDistStrName + "nSeq" + str(self.dataGenerationRegime.nSeq)
