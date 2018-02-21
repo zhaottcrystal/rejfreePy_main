@@ -144,9 +144,9 @@ if initialWeightsDist is not None:
         if results.uniWeights is not None and results.biWeights is not None:
             uniWeights = np.array(eval(results.uniWeights))
             biWeights = np.array(eval(results.biWeights))
-            mcmcRegimeIteratively.run(initialWeightDist = initialWeightsDist, uniWeightsValues=uniWeights, biWeightsValues=biWeights)
+            mcmcRegimeIteratively.run(uniWeightsValues=uniWeights, biWeightsValues=biWeights)
     else:
-        mcmcRegimeIteratively.run(initialWeightDist =initialWeightsDist)
+        mcmcRegimeIteratively.run()
 
 else:
     mcmcRegimeIteratively.run()
