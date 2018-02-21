@@ -32,9 +32,16 @@ argv = sys.argv[1:]
 parser = argparse.ArgumentParser()
 parser.add_argument('-nMCMCIter', action='store', dest='nMCMCIter', type=int, default =2000, help = 'store the number of MCMC iterations')
 parser.add_argument('-dir_name', action='store', dest='dir_name', type=str, help='store the directory name to save the csv files')
+parser.add_argument('-refreshmentMethod', action='store', dest='refreshmentMethod', default= "LOCAL", type=OptionClasses.RefreshmentMethod.from_string, choices=list(OptionClasses.RefreshmentMethod))
+parser.add_argument('-trajectoryLength', action="store", dest='trajectoryLength', default = 0.125, help='save the trajectory length of the local bps sampler', type=float)
+
+
 results = parser.parse_args()
 nMCMCIters = results.nMCMCIter
 dir_name = results.dir_name
+refreshmentMethod = results.refreshmentMethod
+trajectoryLength = results.trajectoryLength
+
 nStates = 6
 ## generate the exchangeable coefficients
 ## set the seed so that we can reproduce generating the
@@ -128,7 +135,9 @@ observedTimePoints = np.arange(0, (bt+1))
 
 mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter=nMCMCIters, thinning=1.0, burnIn=0, onlyHMC= False, HMCPlusBPS=True,
                                           nLeapFrogSteps=40, stepSize=0.02, nHMCSamples=1000, saveRateMtx=False, initialSampleSeed=3,
-                                          rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=0.125), dumpResultIteratively=True,dumpResultIterations=10, dir_name=dir_name)
+                                                            rfOptions=OptionClasses.RFSamplerOptions(
+                                                                trajectoryLength=trajectoryLength,
+                                                                refreshmentMethod=refreshmentMethod), dumpResultIteratively=True,dumpResultIterations=10, dir_name=dir_name)
 
 
 mcmcRegimeIteratively.run()
