@@ -127,7 +127,7 @@ mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIte
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=0.125), dumpResultIteratively=True,dumpResultIterations=5, dir_name=dir_name)
 
 
-mcmcRegimeIteratively.run(initialWeightDist="Normal")
+mcmcRegimeIteratively.run()
 
 
 
