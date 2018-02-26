@@ -387,8 +387,8 @@ class ExactInvarianceTestHMC:
         nMCMCIters = int(1)
         mcmcOptions = MCMCOptions(nMCMCIters, 1, 0)
 
-        M = 1
-        K = 5
+        M = 100
+        K = 50
         EIT3by3 = ExactInvarianceTestHMC(M, 6, K)
 
         ## save prior samples
@@ -416,7 +416,7 @@ class ExactInvarianceTestHMC:
         exchangeCoefHMC = HTransitionSampleHMC['ExchangeableCoefSamples']
         stationaryDistHMC = HTransitionSampleHMC['StationaryDistSamples']
         binaryWeightsHMC = HTransitionSampleHMC['binaryWeightsSamples']
-        
+
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcStationaryWeights.csv", stationaryWeightsHMC, fmt='%.3f',
                    delimiter=',')
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcStationaryDist.csv", stationaryDistHMC, fmt='%.3f', delimiter=',')
@@ -463,7 +463,7 @@ class ExactInvarianceTestHMC:
 
 
 if __name__ == "__main__":
-    ExactInvarianceTest.main()
+    ExactInvarianceTestHMC.main()
 
 
 
