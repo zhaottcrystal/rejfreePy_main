@@ -190,9 +190,11 @@ class ExactInvarianceTestHMC:
         nTrans = suffStat["transitCount"]
         holdTime = suffStat["sojourn"]
 
+        nInit = np.zeros(nStates)
         unique, counts = np.unique(firstLastStatesArrayAll[0][:, 0], return_counts=True)
         nInitCount = np.asarray((unique, counts)).T
-        nInit = nInitCount[:, 1]
+        nInit[nInitCount[:, 0].astype(int)] = nInitCount[:, 1]
+
 
         suffStatDict = {}
         suffStatDict['nTrans'] = nTrans
@@ -315,9 +317,10 @@ class ExactInvarianceTestHMC:
             nTrans = suffStat["transitCount"]
             holdTime = suffStat["sojourn"]
 
+            nInit = np.zeros(nStates)
             unique, counts = np.unique(firstLastStatesArrayAll[0][:, 0], return_counts=True)
             nInitCount = np.asarray((unique, counts)).T
-            nInit = nInitCount[:, 1]
+            nInit[nInitCount[:, 0].astype(int)] = nInitCount[:, 1]
 
 
         result = {}
@@ -393,15 +396,15 @@ class ExactInvarianceTestHMC:
 
         ## save prior samples
         fWeightSamples = EIT3by3.getPriorSamples(123456789)
-        np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fWeightshmc.csv", fWeightSamples, fmt='%.3f', delimiter=',')
+        #np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fWeightshmc.csv", fWeightSamples, fmt='%.3f', delimiter=',')
 
 
         fGFuncSamples= EIT3by3.gFuncMSamples(3, 3, bivariateFeatDictionary, seed=2, priorWeights=fWeightSamples)
 
         fStationary = fGFuncSamples['stationaryDist']
-        np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fStationaryhmc.csv", fStationary, fmt='%.3f', delimiter=',')
+        #np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fStationaryhmc.csv", fStationary, fmt='%.3f', delimiter=',')
         fExchangeCoef = fGFuncSamples['exchangeCoef']
-        np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fExchangehmc.csv", fExchangeCoef, fmt='%.3f', delimiter=',')
+        #np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fExchangehmc.csv", fExchangeCoef, fmt='%.3f', delimiter=',')
 
         HTransitionSampleHMC = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=3, nBivariateFeat=3,
                                                                         bivariateFeatDictionary=bivariateFeatDictionary,

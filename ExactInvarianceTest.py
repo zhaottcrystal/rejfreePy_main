@@ -190,9 +190,10 @@ class ExactInvarianceTest:
         nTrans = suffStat["transitCount"]
         holdTime = suffStat["sojourn"]
 
+        nInit = np.zeros(nStates)
         unique, counts = np.unique(firstLastStatesArrayAll[0][:, 0], return_counts=True)
         nInitCount = np.asarray((unique, counts)).T
-        nInit = nInitCount[:, 1]
+        nInit[nInitCount[:, 0].astype(int)] = nInitCount[:, 1]
 
         suffStatDict = {}
         suffStatDict['nTrans'] = nTrans
@@ -315,9 +316,10 @@ class ExactInvarianceTest:
             nTrans = suffStat["transitCount"]
             holdTime = suffStat["sojourn"]
 
+            nInit = np.zeros(nStates)
             unique, counts = np.unique(firstLastStatesArrayAll[0][:, 0], return_counts=True)
             nInitCount = np.asarray((unique, counts)).T
-            nInit = nInitCount[:, 1]
+            nInit[nInitCount[:, 0].astype(int)] = nInitCount[:, 1]
 
 
         result = {}
