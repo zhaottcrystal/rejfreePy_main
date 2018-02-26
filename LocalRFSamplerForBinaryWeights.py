@@ -539,7 +539,8 @@ class LocalRFSamplerForBinaryWeights:
         if np.isclose(self.rfOptions.refreshRate, 0):
             nextRefreshmentTime = np.inf
         else:
-            nextRefreshmentTime = prng.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
+            # nextRefreshmentTime = prng.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
+            nextRefreshmentTime = np.random.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
 
         for i in range(maxNumberOfIterations):
             watchEndTime = dt.datetime.now()

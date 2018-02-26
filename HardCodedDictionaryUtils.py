@@ -23,7 +23,7 @@ def getHardCodedDict():
     HardCodedDict[(3, 2)] = np.array((6, 7, 8), dtype=np.int)
     HardCodedDict[(3, 4)] = np.array((9, 10), dtype=np.int)
     HardCodedDict[(3, 5)] = np.array((9, 11), dtype=np.int)
-    HardCodedDict[(4, 0)] = np.array((2, 0), dtype=np.int)
+    HardCodedDict[(4, 0)] = np.array((0, 2), dtype=np.int)
     HardCodedDict[(4, 1)] = np.array((4, 5), dtype=np.int)
     HardCodedDict[(4, 2)] = np.array((7, 8), dtype=np.int)
     HardCodedDict[(4, 3)] = np.array((9, 10), dtype=np.int)
