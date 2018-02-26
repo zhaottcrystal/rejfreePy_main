@@ -387,8 +387,8 @@ class ExactInvarianceTest:
         nMCMCIters = int(1)
         mcmcOptions = MCMCOptions(nMCMCIters, 1, 0)
 
-        M = 1
-        K = 2
+        M = 150
+        K = 50
         EIT3by3 = ExactInvarianceTest(M, 6, K)
 
         ## save prior samples
