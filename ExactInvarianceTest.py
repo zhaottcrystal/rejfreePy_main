@@ -407,7 +407,7 @@ class ExactInvarianceTest:
 
 
 
-        HTransitionSampleBPS = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=4, nBivariateFeat=6, bivariateFeatDictionary=bivariateFeatDictionary, seed=3, bt=3, nSeq=50,
+        HTransitionSampleBPS = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=4, nBivariateFeat=6, bivariateFeatDictionary=bivariateFeatDictionary, seed=3, bt=3, nSeq=100,
                                        interLength=0.5, HMCPlusBPS=True, onlyHMC=False, nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize,
                                        nItersPerPathAuxVar = nItersPerPathAuxVar, rfOptions=rfOptions, mcmcOptions=mcmcOptions)
 
