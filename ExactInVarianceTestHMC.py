@@ -391,7 +391,7 @@ class ExactInvarianceTestHMC:
         mcmcOptions = MCMCOptions(nMCMCIters, 1, 0)
 
         M = 150
-        K = 50
+        K = 100
         EIT3by3 = ExactInvarianceTestHMC(M, 6, K)
 
         ## save prior samples
