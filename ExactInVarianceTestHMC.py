@@ -392,21 +392,21 @@ class ExactInvarianceTestHMC:
 
         M = 150
         K = 100
-        EIT3by3 = ExactInvarianceTestHMC(M, 6, K)
+        EIT3by3 = ExactInvarianceTestHMC(M, 10, K)
 
         ## save prior samples
         fWeightSamples = EIT3by3.getPriorSamples(123456789)
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fWeightshmc.csv", fWeightSamples, fmt='%.3f', delimiter=',')
 
 
-        fGFuncSamples= EIT3by3.gFuncMSamples(3, 3, bivariateFeatDictionary, seed=2, priorWeights=fWeightSamples)
+        fGFuncSamples= EIT3by3.gFuncMSamples(4, 6, bivariateFeatDictionary, seed=2, priorWeights=fWeightSamples)
 
         fStationary = fGFuncSamples['stationaryDist']
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fStationaryhmc.csv", fStationary, fmt='%.3f', delimiter=',')
         fExchangeCoef = fGFuncSamples['exchangeCoef']
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fExchangehmc.csv", fExchangeCoef, fmt='%.3f', delimiter=',')
 
-        HTransitionSampleHMC = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=3, nBivariateFeat=3,
+        HTransitionSampleHMC = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=4, nBivariateFeat=6,
                                                                         bivariateFeatDictionary=bivariateFeatDictionary,
                                                                         seed=3, bt=3, nSeq=50,
                                                                         interLength=0.5, HMCPlusBPS=False, onlyHMC=True,

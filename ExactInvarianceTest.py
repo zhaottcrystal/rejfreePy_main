@@ -391,14 +391,14 @@ class ExactInvarianceTest:
 
         M = 150
         K = 100
-        EIT3by3 = ExactInvarianceTest(M, 6, K)
+        EIT3by3 = ExactInvarianceTest(M, 10, K)
 
         ## save prior samples
         fWeightSamples = EIT3by3.getPriorSamples(123456789)
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fWeights.csv", fWeightSamples, fmt='%.3f', delimiter=',')
 
 
-        fGFuncSamples= EIT3by3.gFuncMSamples(3, 3, bivariateFeatDictionary, seed=2, priorWeights=fWeightSamples)
+        fGFuncSamples= EIT3by3.gFuncMSamples(4, 6, bivariateFeatDictionary, seed=2, priorWeights=fWeightSamples)
 
         fStationary = fGFuncSamples['stationaryDist']
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fStationary.csv", fStationary, fmt='%.3f', delimiter=',')
@@ -407,7 +407,7 @@ class ExactInvarianceTest:
 
 
 
-        HTransitionSampleBPS = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=3, nBivariateFeat=3, bivariateFeatDictionary=bivariateFeatDictionary, seed=3, bt=3, nSeq=50,
+        HTransitionSampleBPS = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=4, nBivariateFeat=6, bivariateFeatDictionary=bivariateFeatDictionary, seed=3, bt=3, nSeq=50,
                                        interLength=0.5, HMCPlusBPS=True, onlyHMC=False, nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize,
                                        nItersPerPathAuxVar = nItersPerPathAuxVar, rfOptions=rfOptions, mcmcOptions=mcmcOptions)
 
@@ -421,24 +421,24 @@ class ExactInvarianceTest:
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/bpsExchangeCoef.csv", exchangeCoefBPS, fmt='%.3f', delimiter=',')
 
 
-        HTransitionSampleHMC = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=3, nBivariateFeat=3,
-                                                                        bivariateFeatDictionary=bivariateFeatDictionary,
-                                                                        seed=3, bt=3, nSeq=50,
-                                                                        interLength=0.5, HMCPlusBPS=False, onlyHMC=True,
-                                                                        nLeapFrogSteps=nLeapFrogSteps,
-                                                                        stepSize=stepSize,
-                                                                        nItersPerPathAuxVar=nItersPerPathAuxVar,
-                                                                        rfOptions=rfOptions, mcmcOptions=mcmcOptions)
-
-        stationaryWeightsHMC = HTransitionSampleHMC['stationaryWeightsSamples']
-        exchangeCoefHMC = HTransitionSampleHMC['ExchangeableCoefSamples']
-        stationaryDistHMC = HTransitionSampleHMC['StationaryDistSamples']
-        binaryWeightsHMC = HTransitionSampleHMC['binaryWeightsSamples']
-        np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcStationaryWeights.csv", stationaryWeightsHMC, fmt='%.3f',
-                   delimiter=',')
-        np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcStationaryDist.csv", stationaryDistHMC, fmt='%.3f', delimiter=',')
-        np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcBinaryWeights.csv", binaryWeightsHMC, fmt='%.3f', delimiter=',')
-        np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcExchangeCoef.csv", exchangeCoefHMC, fmt='%.3f', delimiter=',')
+        # HTransitionSampleHMC = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=4, nBivariateFeat=6,
+        #                                                                 bivariateFeatDictionary=bivariateFeatDictionary,
+        #                                                                 seed=3, bt=3, nSeq=50,
+        #                                                                 interLength=0.5, HMCPlusBPS=False, onlyHMC=True,
+        #                                                                 nLeapFrogSteps=nLeapFrogSteps,
+        #                                                                 stepSize=stepSize,
+        #                                                                 nItersPerPathAuxVar=nItersPerPathAuxVar,
+        #                                                                 rfOptions=rfOptions, mcmcOptions=mcmcOptions)
+        #
+        # stationaryWeightsHMC = HTransitionSampleHMC['stationaryWeightsSamples']
+        # exchangeCoefHMC = HTransitionSampleHMC['ExchangeableCoefSamples']
+        # stationaryDistHMC = HTransitionSampleHMC['StationaryDistSamples']
+        # binaryWeightsHMC = HTransitionSampleHMC['binaryWeightsSamples']
+        # np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcStationaryWeights.csv", stationaryWeightsHMC, fmt='%.3f',
+        #            delimiter=',')
+        # np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcStationaryDist.csv", stationaryDistHMC, fmt='%.3f', delimiter=',')
+        # np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcBinaryWeights.csv", binaryWeightsHMC, fmt='%.3f', delimiter=',')
+        # np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/hmcExchangeCoef.csv", exchangeCoefHMC, fmt='%.3f', delimiter=',')
 
 
 
