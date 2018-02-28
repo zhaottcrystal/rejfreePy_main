@@ -379,7 +379,8 @@ class ExactInvarianceTest:
         parser.add_argument('-dir_name', action='store', dest='dir_name', type=str,
                             help='store the directory name to save the csv files')
 
-        bivariateFeatDictionary = HardCodedDictionaryUtils.getHardCodedDictChainGraph(4)
+        nStates = 3
+        bivariateFeatDictionary = HardCodedDictionaryUtils.getHardCodedDictChainGraph(nStates)
         nLeapFrogSteps = 40
         stepSize = 0.002
         nItersPerPathAuxVar = 30
@@ -389,16 +390,19 @@ class ExactInvarianceTest:
         nMCMCIters = int(1)
         mcmcOptions = MCMCOptions(nMCMCIters, 1, 0)
 
-        M = 150
+        M = 200
         K = 100
-        EIT3by3 = ExactInvarianceTest(M, 10, K)
+        nExchangeCoef = int(nStates * (nStates - 1) / 2)
+        nSeq=150
+        nTotal = int(nStates + nExchangeCoef)
+        EIT3by3 = ExactInvarianceTest(M, nTotal, K)
 
         ## save prior samples
         fWeightSamples = EIT3by3.getPriorSamples(123456789)
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fWeights.csv", fWeightSamples, fmt='%.3f', delimiter=',')
 
 
-        fGFuncSamples= EIT3by3.gFuncMSamples(4, 6, bivariateFeatDictionary, seed=2, priorWeights=fWeightSamples)
+        fGFuncSamples= EIT3by3.gFuncMSamples(nStates, nExchangeCoef, bivariateFeatDictionary, seed=2, priorWeights=fWeightSamples)
 
         fStationary = fGFuncSamples['stationaryDist']
         np.savetxt("/home/zhaott/project/zhaott/rejfreePy_main/EIT/fStationary.csv", fStationary, fmt='%.3f', delimiter=',')
@@ -407,7 +411,7 @@ class ExactInvarianceTest:
 
 
 
-        HTransitionSampleBPS = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=4, nBivariateFeat=6, bivariateFeatDictionary=bivariateFeatDictionary, seed=3, bt=3, nSeq=100,
+        HTransitionSampleBPS = EIT3by3.getMSuccessiveConditionalSamples(M=M, K=K, nStates=nStates, nBivariateFeat=nExchangeCoef, bivariateFeatDictionary=bivariateFeatDictionary, seed=3, bt=3, nSeq=nSeq,
                                        interLength=0.5, HMCPlusBPS=True, onlyHMC=False, nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize,
                                        nItersPerPathAuxVar = nItersPerPathAuxVar, rfOptions=rfOptions, mcmcOptions=mcmcOptions)
 
