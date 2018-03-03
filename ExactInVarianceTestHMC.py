@@ -392,7 +392,7 @@ class ExactInvarianceTestHMC:
         mcmcOptions = MCMCOptions(nMCMCIters, 1, 0)
 
 
-        M = 150
+        M = 300
         K = 200
         nSeq = 150
         nExchangeCoef = int(nStates * (nStates - 1) / 2)

@@ -174,7 +174,8 @@ class ExactInvarianceTest:
         weightGenerationRegime = WeightGenerationRegime(nStates=nStates, nBivariateFeat=nBivariateFeat,
                                                             stationaryWeights=stationaryWeights,
                                                             bivariateWeights=binaryWeights)
-        prng = RandomState(np.random.choice(2 ** 32 - 1, 1))
+        randomSeed = np.random.choice(2 ** 32 - 1, 1)
+        prng = RandomState(randomSeed)
 
         dataRegime = DataGenerationRegime(nStates=nStates,
                                         bivariateFeatIndexDictionary=bivariateFeatDictionary, btLength=bt,
@@ -390,7 +391,7 @@ class ExactInvarianceTest:
         nMCMCIters = int(1)
         mcmcOptions = MCMCOptions(nMCMCIters, 1, 0)
 
-        M = 150
+        M = 300
         K = 200
         nExchangeCoef = int(nStates * (nStates - 1) / 2)
         nSeq=150
