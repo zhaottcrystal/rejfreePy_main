@@ -385,7 +385,7 @@ class ExactInvarianceTest:
         nLeapFrogSteps = 40
         stepSize = 0.002
         nItersPerPathAuxVar = 30
-        trajectoryLength = 0.125
+        trajectoryLength = 0.001
         refreshmentMethod = RefreshmentMethod.LOCAL
         rfOptions = RFSamplerOptions(trajectoryLength=trajectoryLength, refreshmentMethod=refreshmentMethod)
         nMCMCIters = int(1)
