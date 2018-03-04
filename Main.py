@@ -61,6 +61,8 @@ parser.add_argument('-univariateWeights', action='store', dest='uniWeights', hel
 parser.add_argument('-bivariateWeights', action='store', dest='biWeights', help = 'store the bivariate weights for the exchangeable parameters')
 parser.add_argument('-refreshmentMethod', action='store', dest='refreshmentMethod', default= "LOCAL", type=OptionClasses.RefreshmentMethod.from_string, choices=list(OptionClasses.RefreshmentMethod))
 parser.add_argument('--provideSeq', action="store_true", dest='provideSeq', help='tell the program if the sequences have been generated')
+parser.add_argument('-batchSize', action='store', dest='batchSize', type=int, default=50, help='the batch size when updating the ergodic mean')
+
 
 results = parser.parse_args()
 dir_name = results.dir_name
@@ -78,7 +80,7 @@ refreshmentMethod = results.refreshmentMethod
 provideSeq = results.provideSeq
 seedGenData = results.seed
 nItersPerPathAuxVar = results.nItersPerPathAuxVar
-        #np.fromstring(results.biWeights, dtype=float, sep=',')
+batchSize = results.batchSize
 
 if results.initialSamplesMethod is not None:
     initialWeightsDist = results.initialSamplesMethod
@@ -162,7 +164,7 @@ else:
 mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter, thinning=1.0, burnIn=0, onlyHMC= results.onlyHMC, HMCPlusBPS=results.HMCPlusBPS,
                                           nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize, saveRateMtx=False, initialSampleSeed=initialSampleSeed,
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength, refreshmentMethod=refreshmentMethod), dumpResultIteratively=True,
-                                                            dumpResultIterations=dumpResultIterations, dir_name=dir_name, nItersPerPathAuxVar=nItersPerPathAuxVar, batchSize=50)
+                                                            dumpResultIterations=dumpResultIterations, dir_name=dir_name, nItersPerPathAuxVar=nItersPerPathAuxVar, batchSize=batchSize)
 if initialWeightsDist is not None:
     if initialWeightsDist == "AssignedWeightsValues":
         if results.uniWeights is not None and results.biWeights is not None:

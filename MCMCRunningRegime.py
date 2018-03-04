@@ -222,8 +222,8 @@ class MCMCRunningRegime:
         ## of these samples and then refresh it to zero after we reach the 
         ## batch size
         ## we only check the stationary distribution and exchangeable parameters
-        stationaryDistBatchSum = np.zeros(self.nStates)
-        exchangeCoefBatchSum = np.zeros(self.nExchange)
+        stationaryDistBatchSum = np.zeros((1, self.nStates))
+        exchangeCoefBatchSum = np.zeros((1, self.nExchange))
         
         ## output the true stationary distribution and exchangeable parameters
         self.outputTrueParameters(self.dir_name)
@@ -259,8 +259,8 @@ class MCMCRunningRegime:
         else:
             sample = initialStationaryWeights
         
-        previousStationaryDistMean = np.zeros(self.nStates)
-        previousExchangeCoefMean = np.zeros(self.nExchange)
+        previousStationaryDistMean = np.zeros((1, self.nStates))
+        previousExchangeCoefMean = np.zeros((1, self.nExchange))
 
         for i in range(self.nMCMCIter):
             
