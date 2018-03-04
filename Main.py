@@ -73,7 +73,6 @@ stepSize = results.stepSize
 trajectoryLength = results.trajectoryLength
 initialSampleSeed = results.initialSampleSeed
 interLength= results.interLength
-nHMCSamples = results.nHMCSamples
 dumpResultIterations = results.dumpResultIterations
 refreshmentMethod = results.refreshmentMethod
 provideSeq = results.provideSeq
@@ -161,7 +160,7 @@ else:
 #mcmcWriteToFile = mcmcRegime.recordResult(mcmcSamples, "/Users/crystal/Dropbox/rejfree/rejfreePy/results/", "wallTime", "HMCPlusBPS", nMCMCIter=2000, saveRateMtx=False)
 
 mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter, thinning=1.0, burnIn=0, onlyHMC= results.onlyHMC, HMCPlusBPS=results.HMCPlusBPS,
-                                          nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize, nHMCSamples=nHMCSamples, saveRateMtx=False, initialSampleSeed=initialSampleSeed,
+                                          nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize, saveRateMtx=False, initialSampleSeed=initialSampleSeed,
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength, refreshmentMethod=refreshmentMethod), dumpResultIteratively=True,
                                                             dumpResultIterations=dumpResultIterations, dir_name=dir_name, nItersPerPathAuxVar=nItersPerPathAuxVar, batchSize=50)
 if initialWeightsDist is not None:

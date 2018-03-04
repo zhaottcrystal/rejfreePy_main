@@ -31,7 +31,7 @@ from numpy.random import RandomState
 class MCMCRunningRegime:
 
     def __init__(self, dataGenerationRegime, nMCMCIter, thinning, burnIn, onlyHMC, HMCPlusBPS, prng=None, nLeapFrogSteps=40,
-                 stepSize=0.02, nHMCSamples=2000, saveRateMtx = False, initialSampleSeed=None, rfOptions=None,
+                 stepSize=0.02, saveRateMtx = False, initialSampleSeed=None, rfOptions=None,
                  dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000,
                  initialSampleDist="Fixed", refreshmentMethod= OptionClasses.RefreshmentMethod.LOCAL, batchSize=50):
         if prng is None:
@@ -47,7 +47,6 @@ class MCMCRunningRegime:
 
         # HMC related options
         self.nLeapFrogSteps = nLeapFrogSteps
-        self.nHMCSamples = nHMCSamples
         self.stepSize = stepSize
 
         # onlyHMC and HMCPlusBPS are both boolean variables
