@@ -10,7 +10,7 @@ import ExpectedCompleteReversibleModelBinaryFactors
 import HMC
 import LocalRFSamplerForBinaryWeights
 from PhyloLocalRFMove import PhyloLocalRFMove
-import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
+from ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
 import FullTrajectorGeneration
 import DataGenerationRegime
 # from main.OptionClasses import MCMCOptions
@@ -32,7 +32,8 @@ class MCMCRunningRegime:
 
     def __init__(self, dataGenerationRegime, nMCMCIter, thinning, burnIn, onlyHMC, HMCPlusBPS, prng=None, nLeapFrogSteps=40,
                  stepSize=0.02, nHMCSamples=2000, saveRateMtx = False, initialSampleSeed=None, rfOptions=None,
-                 dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000, initialSampleDist="Fixed", refreshmentMethod= OptionClasses.RefreshmentMethod.LOCAL):
+                 dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000,
+                 initialSampleDist="Fixed", refreshmentMethod= OptionClasses.RefreshmentMethod.LOCAL, batchSize=50):
         if prng is None:
             self.prng = dataGenerationRegime.prng
         else:
@@ -85,6 +86,8 @@ class MCMCRunningRegime:
         self.nItersPerPathAuxVar = nItersPerPathAuxVar
         self.initialWeightDist = "Fixed"
         self.refreshmentMethod = refreshmentMethod
+        self.nExchange = int(self.nStates * (self.nStates-1)/2)
+        self.batchSize = batchSize
 
 
     def generateFixedInitialWeights(self):
@@ -145,7 +148,7 @@ class MCMCRunningRegime:
         initialStationaryWeights = weights['initialStationaryWeights']
         initialBinaryWeights = weights['initialBinaryWeights']
 
-        initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure.ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(self.nStates,
+        initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(self.nStates,
                                                                                    initialStationaryWeights,
                                                                                    initialBinaryWeights,
                                                                                    self.bivariateFeatIndexDictionary)
@@ -205,9 +208,24 @@ class MCMCRunningRegime:
         result['avgWeights'] = avgWeights
         result['weightSamples'] = weightSamples
         return result
-
+    
+    def getErgodicMean(self, nSamples, previousMean, newPartialSum, batchSize):
+        ## this funcion uses the previous Mean vector and the number
+        ## of previous samples to obtain the new cumulative mean after
+        ## obtaining the batch of new vector values "newValues"
+        newMean = (previousMean * (nSamples-batchSize) + newPartialSum)/nSamples
+        return newMean
+        
+        
 
     def run(self,  uniWeightsValues=None, biWeightsValues=None):
+        ## for every batchSize number of samples, we get the total sum
+        ## of these samples and then refresh it to zero after we reach the 
+        ## batch size
+        ## we only check the stationary distribution and exchangeable parameters
+        stationaryDistBatchSum = np.zeros(self.nStates)
+        exchangeCoefBatchSum = np.zeros(self.nExchange)
+        
         ## output the true stationary distribution and exchangeable parameters
         self.outputTrueParameters(self.dir_name)
 
@@ -227,7 +245,7 @@ class MCMCRunningRegime:
         binaryWeightsSamples = posteriorSamples['binaryWeightsSamples']
         exchangeableSamples = posteriorSamples['exchangeableSamples']
         rateMatrixSamples = posteriorSamples['rateMatrixSamples']
-
+        
         if self.dumpResultIteratively:
             allFileNames = self.createAllOutputFileNames(self.dir_name, self.samplingMethod, self.nMCMCIter, saveRateMtx=False,
                                      trajectoryLength=self.trajectoryLength, mcmcSeed=self.initialSampleSeed)
@@ -241,8 +259,12 @@ class MCMCRunningRegime:
             sample = initializedPosteriorSamples['avgWeights']
         else:
             sample = initialStationaryWeights
+        
+        previousStationaryDistMean = np.zeros(self.nStates)
+        previousExchangeCoefMean = np.zeros(self.nExchange)
 
         for i in range(self.nMCMCIter):
+            
             stationaryWeightsSamples[i, :] = initialStationaryWeights
             binaryWeightsSamples[i, :] = initialBinaryWeights
             exchangeableSamples[i,:] = initialExchangeCoef
@@ -250,6 +272,29 @@ class MCMCRunningRegime:
                 rateMatrixSamples[i, :] = initialRateMatrix
             stationaryDistSamples[i, :] = initialStationaryDist
 
+            stationaryDistBatchSum = stationaryDistBatchSum + initialStationaryDist
+            exchangeCoefBatchSum = exchangeCoefBatchSum + initialExchangeCoef
+
+            if i > 0 and (i+1) % self.batchSize == 0:
+                ## When we reach the batch size, refresh the sum
+                ## write the currrent file to csv and then refresh the vector to zeros
+                stationaryDistBatchMean = self.getErgodicMean(nSamples=int(i+1),
+                                                              previousMean=previousStationaryDistMean,
+                                                              newPartialSum=stationaryDistBatchSum,
+                                                              batchSize = self.batchSize)
+                exchangeCoefBatchMean = self.getErgodicMean(nSamples = int(i+1),
+                                                            previousMean=previousExchangeCoefMean,
+                                                            newPartialSum=exchangeCoefBatchSum,
+                                                            batchSize=self.batchSize)
+                previousStationaryDistMean = stationaryDistBatchMean
+                previousExchangeCoefMean = exchangeCoefBatchMean
+                self.dumpResult(stationaryDistBatchMean[0, :],allFileNames['stationaryDistErgodicMean'])
+                self.dumpResult(exchangeCoefBatchMean[0, :],allFileNames['exchangeCoefErgodicMean'])
+                stationaryDistBatchSum = np.zeros(self.nStates)
+                exchangeCoefBatchSum = np.zeros(self.nExchange)
+
+
+                                     
             if i > 0 and (i+1) % self.dumpResultIterations == 0:
                 ## record the results
                 self.dumpResult(stationaryDistSamples[(i+1-self.dumpResultIterations):(i+1), :],   allFileNames['stationaryDist'])
@@ -312,7 +357,7 @@ class MCMCRunningRegime:
                 phyloLocalRFMove = PhyloLocalRFMove(model=model, sampler=localSampler, initialPoints=initialBinaryWeights, options=self.rfOptions, prng=RandomState(i))
                 initialBinaryWeights = phyloLocalRFMove.execute()
 
-            initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure.ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(self.nStates, initialStationaryWeights,
+            initialRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(self.nStates, initialStationaryWeights,
                                                                                            initialBinaryWeights,
                                                                                            bivariateFeatIndexDictionary=self.bivariateFeatIndexDictionary)
 
@@ -404,7 +449,7 @@ class MCMCRunningRegime:
         stationaryWeightsStrName = stationaryWeightsStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
         exchangeableCoefStrName = exchangeableCoefStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
         binaryWeightsStrName = binaryWeightsStr + samplingMethod + nMCMCIter + "initialWeightDist" + self.initialWeightDist
-
+        
         if self.HMCPlusBPS:
             if saveRateMtx:
                 rateMtxStr = "rateMatrix"
@@ -466,22 +511,27 @@ class MCMCRunningRegime:
             binaryWeightsStrName = binaryWeightsStrName + "stepSize" + str(self.stepSize)
             if saveRateMtx:
                 rateMtxStrName = rateMtxStrName + str(self.stepSize)
-
+        
+        stationaryDistErgodicMean = stationaryDistStrName + "ErgodicMean" + "batchSize" + str(self.batchSize)
+        exchangeCoefErgodicMean = exchangeableCoefStrName + "ErgodicMean" + "batchSize" + str(self.batchSize)
 
         if mcmcSeed is not None:
             stationaryDistStrName = stationaryDistStrName + "mcmcSeed" +mcmcSeed+ ".csv"
             stationaryWeightsStrName = stationaryWeightsStrName + "mcmcSeed" + mcmcSeed+ ".csv"
             exchangeableCoefStrName = exchangeableCoefStrName + "mcmcSeeed" + mcmcSeed+ ".csv"
-            binaryWeightsStrName = binaryWeightsStrName +"mcmcSeed"+ mcmcSeed + ".csv"
+            binaryWeightsStrName = binaryWeightsStrName + "mcmcSeed"+ mcmcSeed + ".csv"
+            stationaryDistErgodicMean = stationaryDistErgodicMean + "mcmcSeed"+ mcmcSeed + ".csv"
+            exchangeCoefErgodicMean = exchangeCoefErgodicMean + "mcmcSeed"+ mcmcSeed + ".csv"
+            
             if saveRateMtx:
                 rateMtxStrName = rateMtxStrName + mcmcSeed
-
-
 
         stationaryDistFileName = os.path.join(dir_name, stationaryDistStrName)
         stationaryWeightsFileName = os.path.join(dir_name, stationaryWeightsStrName)
         exchangeableCoefFileName = os.path.join(dir_name, exchangeableCoefStrName)
         binaryWeightsFileName = os.path.join(dir_name, binaryWeightsStrName)
+        stationaryDistErgodicMeanFileName = os.path.join(dir_name,stationaryDistErgodicMean)
+        exchangeCoefErgodicMeanFileName = os.path.join(dir_name, exchangeCoefErgodicMean)
         if saveRateMtx:
             rateMtxFileName = os.path.join(dir_name, rateMtxStrName)
 
@@ -490,6 +540,8 @@ class MCMCRunningRegime:
         result['stationaryWeights'] = stationaryWeightsFileName
         result['exchangeableCoef'] = exchangeableCoefFileName
         result['binaryWeights'] = binaryWeightsFileName
+        result['stationaryDistErgodicMean'] = stationaryDistErgodicMeanFileName
+        result['exchangeCoefErgodicMean'] = exchangeCoefErgodicMeanFileName
         if saveRateMtx:
             result['rateMatrix'] =rateMtxFileName
         return result

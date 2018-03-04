@@ -95,6 +95,7 @@ class DataGenerationRegime:
         self.exchangeCoef = self.rateMtxObj.getExchangeCoef()
         self.rateMtx = self.rateMtxObj.getRateMtx()
         self.data = None
+        self.suffStat = None
         self.nPairSeq = None
 
 
@@ -120,6 +121,7 @@ class DataGenerationRegime:
         nStates = len(seqList[0]['sojourn'])
         totalSojournTime = np.zeros(nStates)
         totalTransitionCount = np.zeros((nStates, nStates))
+
         for i in range(0, nSeq):
             totalSojournTime = totalSojournTime + seqList[i]['sojourn']
             totalTransitionCount = totalTransitionCount + seqList[i]['transitCount']
@@ -127,6 +129,8 @@ class DataGenerationRegime:
         result = {}
         result['sojourn'] = totalSojournTime
         result['transitCount'] = totalTransitionCount
+        self.suffStat = result
+
         return result
 
 

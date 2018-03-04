@@ -1,13 +1,6 @@
 import sys
 #sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy")
 #os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy")
-# import numpy as np
-# from main.DataGenerationRegime import DataGenerationRegime
-# from main.DataGenerationRegime import WeightGenerationRegime
-# from main.MCMCRunningRegime import  MCMCRunningRegime
-# from main.HardCodedDictionaryUtils import getHardCodedDict
-# from main.HardCodedDictionaryUtils import getHardCodedDictChainGraph
-# from main.OptionClasses import RFSamplerOptions
 from numpy.random import RandomState
 import DataGenerationRegime
 import MCMCRunningRegime
@@ -16,6 +9,8 @@ import OptionClasses
 import argparse
 import FullTrajectorGeneration
 import numpy as np
+import pickle
+import os
 
 
 ## add command line argument
@@ -39,7 +34,7 @@ parser.add_argument('-nLeapFrogSteps', action='store', dest='nLeapFrogSteps', de
 ## store the leapfrog size of HMC
 parser.add_argument('-stepSize', action='store', dest='stepSize', default=0.02, type=float, help='store the leapfrog step size in HMC.')
 ## store the number of HMC samples
-parser.add_argument('-nHMCSamples', action='store', dest='nHMCSamples', default=2000, type=int, help='store the number of HMC samples in HMC algorithm')
+parser.add_argument('-nItersPerPathAuxVar', action='store', dest='nItersPerPathAuxVar', default=500, type=int, help='store the number of HMC samples in HMC algorithm')
 ## add the boolean variable to indicate whether we store the result in the end or we write results to csv files
 parser.add_argument('--dumpResultIteratively', action='store_true', help='flag indicating we write results to csv iteratively instead of in the end')
 ## the number of iterations we write results to disk
@@ -65,7 +60,7 @@ parser.add_argument('-univariateWeights', action='store', dest='uniWeights', hel
 ## add the initial bivariate weights if we would like to provide initial weights
 parser.add_argument('-bivariateWeights', action='store', dest='biWeights', help = 'store the bivariate weights for the exchangeable parameters')
 parser.add_argument('-refreshmentMethod', action='store', dest='refreshmentMethod', default= "LOCAL", type=OptionClasses.RefreshmentMethod.from_string, choices=list(OptionClasses.RefreshmentMethod))
-
+parser.add_argument('--provideSeq', action="store_true", dest='provideSeq', help='tell the program if the sequences have been generated')
 
 results = parser.parse_args()
 dir_name = results.dir_name
@@ -81,7 +76,9 @@ interLength= results.interLength
 nHMCSamples = results.nHMCSamples
 dumpResultIterations = results.dumpResultIterations
 refreshmentMethod = results.refreshmentMethod
-
+provideSeq = results.provideSeq
+seedGenData = results.seed
+nItersPerPathAuxVar = results.nItersPerPathAuxVar
         #np.fromstring(results.biWeights, dtype=float, sep=',')
 
 if results.initialSamplesMethod is not None:
@@ -91,23 +88,49 @@ else:
 
 
 ####################################################
-## Weight Generation
-seedGenData = results.seed
-prng = RandomState(seedGenData)
-weightGenerationRegime = DataGenerationRegime.WeightGenerationRegime(nStates = nStates, nBivariateFeat= int(nStates *(nStates-1)/2), prng=prng)
-weightGenerationRegime.generateStationaryWeightsFromUniform()
-weightGenerationRegime.generateBivariateWeightsFromNormal()
+if not provideSeq:
+    ## Weight Generation
+    prng = RandomState(seedGenData)
+    weightGenerationRegime = DataGenerationRegime.WeightGenerationRegime(nStates = nStates, nBivariateFeat= int(nStates *(nStates-1)/2), prng=prng)
+    weightGenerationRegime.generateStationaryWeightsFromUniform()
+    weightGenerationRegime.generateBivariateWeightsFromNormal()
 
 ####################################################
-## sequences data generation
+    ## sequences data generation
 
-dataRegime = DataGenerationRegime.DataGenerationRegime(nStates=nStates,  bivariateFeatIndexDictionary=HardCodedDictionaryUtils.getHardCodedDictChainGraph(nStates=nStates), btLength=bt, nSeq=nSeq, weightGenerationRegime=weightGenerationRegime, prng = prng, interLength=interLength)
-## generate the sequences data
-initialStateSeq = dataRegime.generatingInitialStateSeq()
-seqList = dataRegime.generatingSeq(initialStateSeq)
-suffStat = dataRegime.getSufficientStatFromSeq(seqList)
-firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval(seqList)
-trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
+    dataRegime = DataGenerationRegime.DataGenerationRegime(nStates=nStates,  bivariateFeatIndexDictionary=HardCodedDictionaryUtils.getHardCodedDictChainGraph(nStates=nStates), btLength=bt, nSeq=nSeq, weightGenerationRegime=weightGenerationRegime, prng = prng, interLength=interLength)
+    ## generate the sequences data
+    initialStateSeq = dataRegime.generatingInitialStateSeq()
+    seqList = dataRegime.generatingSeq(initialStateSeq)
+    suffStat = dataRegime.getSufficientStatFromSeq(seqList)
+    firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval(seqList)
+    trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
+
+    ## try if using pickle library works
+    ## serialize dataRegime so that when we compare HMC and BPS, they can have the same data frame
+    dataFileDirName = "nStates" + str(nStates) + "seedGenData" + str(seedGenData) + "bt" + str(bt) + "nSeq" + str(nSeq) + "interLength" + str(interLength)
+    directory = os.path.join(dir_name, dataFileDirName)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    os.chdir(directory)
+
+    dataFileName = dataFileDirName + ".file"
+    with open(dataFileName, "wb") as f:
+        pickle.dump(dataRegime, f, pickle.HIGHEST_PROTOCOL)
+    with open(dataFileName, "rb") as f:
+        dataRegime = pickle.load(f)
+else:
+    dataFileDirName = "nStates" + str(nStates) + "seedGenData" + str(seedGenData) + "bt" + str(bt) + "nSeq" + str(nSeq) + "interLength" + str(interLength)
+    os.chdir(dir_name)
+    directory = dataFileDirName
+    if not os.path.exists(directory):
+        raise ValueError("The directory of the provided sequences does not exist")
+    else:
+        os.chdir(os.path.join(dir_name, directory))
+
+    dataFileName = dataFileDirName + ".file"
+    with open(dataFileName, "rb") as f:
+        dataRegime = pickle.load(f)
 
 ####################################################
 ## validate the data generating process is correct via the sufficient statistics of the time series.
@@ -140,7 +163,7 @@ trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
 mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter, thinning=1.0, burnIn=0, onlyHMC= results.onlyHMC, HMCPlusBPS=results.HMCPlusBPS,
                                           nLeapFrogSteps=nLeapFrogSteps, stepSize=stepSize, nHMCSamples=nHMCSamples, saveRateMtx=False, initialSampleSeed=initialSampleSeed,
                                           rfOptions=OptionClasses.RFSamplerOptions(trajectoryLength=trajectoryLength, refreshmentMethod=refreshmentMethod), dumpResultIteratively=True,
-                                                            dumpResultIterations=dumpResultIterations, dir_name=dir_name)
+                                                            dumpResultIterations=dumpResultIterations, dir_name=dir_name, nItersPerPathAuxVar=nItersPerPathAuxVar, batchSize=50)
 if initialWeightsDist is not None:
     if initialWeightsDist == "AssignedWeightsValues":
         if results.uniWeights is not None and results.biWeights is not None:

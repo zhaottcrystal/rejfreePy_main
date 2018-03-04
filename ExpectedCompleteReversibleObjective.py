@@ -51,7 +51,7 @@ class ExpectedCompleteReversibleObjective:
         self.lastValue = None
         self.lastDerivative = None
 
-
+        self.fixDerivative = self.nInit + self.TStar
 
 
     def calculate(self, weights, nBivariateFeatWeightsDictionary):
@@ -80,13 +80,13 @@ class ExpectedCompleteReversibleObjective:
 
         gradient = np.zeros(dim)
         ## get the gradient for the univariate weights (for stationary distribution)
-        term1 = self.nInit
+        # term1 = self.nInit
         term2 = -self.nStar * stationaryDist
-        term3 = self.TStar
+        # term3 = self.TStar
         term4 = -self.TStarStar * stationaryDist
         term5 = -self.mStar
         term6 = self.mStarStar * stationaryDist
-        gradient[0:nStates] = term1 + term2 + term3 + term4 + term5 + term6
+        gradient[0:nStates] = self.fixDerivative + term2  + term4 + term5 + term6
 
         ## combined with the Normal prior information for the weight
         gradient[0:nStates] = gradient[0:nStates] - self.kappa * weightsForPi
@@ -177,21 +177,18 @@ class ExpectedCompleteReversibleObjective:
         stationaryDist = rateMtxResult.getStationaryDist()
         unnormalizedRateMtx = rateMtxResult.getRateMtx()
 
-        holdTimesDiag = np.diag(self.holdTimes)
+
         rateMtxCopy = np.copy(unnormalizedRateMtx)
         np.fill_diagonal(rateMtxCopy, 0)
-        self.mTrans = np.matmul(holdTimesDiag, rateMtxCopy)
+        self.mTrans = np.matmul(self.holdTimesDiag, rateMtxCopy)
         self.mStar = np.sum(self.mTrans, axis=0)
         self.mStarStar = np.sum(self.mStar)
 
-        gradient = np.zeros(nStates)
-        term1 = self.nInit
         term2 = -self.nStar * stationaryDist
-        term3 = self.TStar
         term4 = -self.TStarStar * stationaryDist
         term5 = -self.mStar
         term6 = self.mStarStar * stationaryDist
-        gradient = term1 + term2 + term3 + term4 + term5 + term6
+        gradient = self.fixDerivative + term2 + term4 + term5 + term6
 
         ## combined with the Normal prior information for the weight
         gradient = gradient - self.kappa * weightsforPi
@@ -214,12 +211,12 @@ class ExpectedCompleteReversibleObjective:
     @staticmethod
     def requireUpdate(lastX, x):
 
+        if lastX is None:
+            return True
+
         if lastX is not None:
             if len(lastX) != len(x):
                 raise ValueError("The length of lastX and x should be equal.")
-
-        if lastX is None:
-            return True
 
         for i in range(len(x)):
             if lastX[i] != x[i]:
