@@ -159,10 +159,8 @@ else:
     directory = dataFileDirName
     print(directory)
     print(os.getcwd())
-    if not os.path.exists(directory):
-        raise ValueError("The directory of the provided sequences does not exist")
-    else:
-        os.chdir(os.path.join(dir_name, directory))
+    print(os.path.join(dir_name, directory))
+    os.chdir(os.path.join(dir_name, directory))
 
     dataFileName = dataFileDirName + ".file"
     with open(dataFileName, "rb") as f:
