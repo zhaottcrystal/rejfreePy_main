@@ -26,6 +26,7 @@ import argparse
 import DataGenerationRegime
 import MCMCRunningRegime
 import OptionClasses
+import pickle
 
 
 argv = sys.argv[1:]
@@ -34,6 +35,12 @@ parser.add_argument('-nMCMCIter', action='store', dest='nMCMCIter', type=int, de
 parser.add_argument('-dir_name', action='store', dest='dir_name', type=str, help='store the directory name to save the csv files')
 parser.add_argument('-refreshmentMethod', action='store', dest='refreshmentMethod', default= "LOCAL", type=OptionClasses.RefreshmentMethod.from_string, choices=list(OptionClasses.RefreshmentMethod))
 parser.add_argument('-trajectoryLength', action="store", dest='trajectoryLength', default = 0.125, help='save the trajectory length of the local bps sampler', type=float)
+parser.add_argument('--provideSeq', action="store_true", dest='provideSeq', help='tell the program if the sequences have been generated')
+parser.add_argument('-bt', action='store', dest='bt', type=float, default=5.0, help='store the branch length, in other words, the total length of the time series')
+## store the total number of generated time series sequences
+parser.add_argument('-nSeq', action='store', dest='nSeq', type=int, default= 5000, help='store the number of sequences of the time series')
+## store the time interval between two observation points
+parser.add_argument('-interLength', action='store', dest='interLength', type=float, default=1.0, help='store the interval length of two observation points in the time series')
 
 
 results = parser.parse_args()
@@ -41,6 +48,10 @@ nMCMCIters = results.nMCMCIter
 dir_name = results.dir_name
 refreshmentMethod = results.refreshmentMethod
 trajectoryLength = results.trajectoryLength
+provideSeq = results.provideSeq
+nSeq = results.nSeq
+bt = results.bt
+interLength = results.interLength
 
 nStates = 6
 ## generate the exchangeable coefficients
@@ -115,26 +126,56 @@ print(trueExchangeCoef)
 # [2.7527184481647362, 1.6232287117730273, 0.31984199654874601, 2.9926928816680904, 0.8125636797020549, 0.081341438819008474, 0.034234981080808163,
 # 0.23784619170668767, 2.6740785756861607, 3.679010975414601, 0.64264178800599125, 7.8762417929474466, 3.3626776006407701, 0.099309793742461433, 0.54989233610573274]
 
-np.round(trueExchangeCoef, 3)
-
 ## generate data sequences of a CTMC with an un-normalized rate matrix
-bt = 5.0
-nSeq = 5000
-prng = RandomState(seed)
-weightGenerationRegime = DataGenerationRegime.WeightGenerationRegime(nStates = nStates, nBivariateFeat= bivariateFeatIndexDictionary, stationaryWeights=stationaryWeights, bivariateWeights=bivariateWeights)
-dataRegime = DataGenerationRegime.DataGenerationRegime(nStates=nStates,  bivariateFeatIndexDictionary=bivariateFeatIndexDictionary, btLength=bt, nSeq=nSeq, weightGenerationRegime=weightGenerationRegime, prng = prng, interLength=1.0)
-## generate the sequences data
-initialStateSeq = dataRegime.generatingInitialStateSeq()
-seqList = dataRegime.generatingSeq(initialStateSeq)
-suffStat = dataRegime.getSufficientStatFromSeq(seqList)
-firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval(seqList)
-trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
-print(trueRateMtx)
-observedTimePoints = np.arange(0, (bt+1))
+
+if not provideSeq:
+    ## Weight Generation
+    prng = RandomState(seed)
+    weightGenerationRegime = DataGenerationRegime.WeightGenerationRegime(nStates=nStates,
+                                                                         nBivariateFeat=bivariateFeatIndexDictionary,
+                                                                         stationaryWeights=stationaryWeights,
+                                                                         bivariateWeights=bivariateWeights)
+    dataRegime = DataGenerationRegime.DataGenerationRegime(nStates=nStates,
+                                                           bivariateFeatIndexDictionary=bivariateFeatIndexDictionary,
+                                                           btLength=bt, nSeq=nSeq,
+                                                           weightGenerationRegime=weightGenerationRegime, prng=prng,
+                                                           interLength=interLength)
+    ## generate the sequences data
+    initialStateSeq = dataRegime.generatingInitialStateSeq()
+    seqList = dataRegime.generatingSeq(initialStateSeq)
+    suffStat = dataRegime.getSufficientStatFromSeq(seqList)
+    firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval(seqList)
+    trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
+
+    ## try if using pickle library works
+    ## serialize dataRegime so that when we compare HMC and BPS, they can have the same data frame
+    dataFileDirName = "nStates" + str(nStates) + "seedGenData" + str(seed) + "bt" + str(bt) + "nSeq" + str(nSeq) + "interLength" + str(interLength)
+    directory = os.path.join(dir_name, dataFileDirName)
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    os.chdir(directory)
+
+    dataFileName = dataFileDirName + ".file"
+    with open(dataFileName, "wb") as f:
+        pickle.dump(dataRegime, f, pickle.HIGHEST_PROTOCOL)
+    with open(dataFileName, "rb") as f:
+        dataRegime = pickle.load(f)
+else:
+    dataFileDirName = "nStates" + str(nStates) + "seedGenData" + str(seed) + "bt" + str(bt) + "nSeq" + str(nSeq) + "interLength" + str(interLength)
+    os.chdir(dir_name)
+    directory = dataFileDirName
+    if not os.path.exists(directory):
+        raise ValueError("The directory of the provided sequences does not exist")
+    else:
+        os.chdir(os.path.join(dir_name, directory))
+
+    dataFileName = dataFileDirName + ".file"
+    with open(dataFileName, "rb") as f:
+        dataRegime = pickle.load(f)
 
 
 mcmcRegimeIteratively = MCMCRunningRegime.MCMCRunningRegime(dataRegime, nMCMCIter=nMCMCIters, thinning=1.0, burnIn=0, onlyHMC= False, HMCPlusBPS=True,
-                                          nLeapFrogSteps=40, stepSize=0.02, nHMCSamples=1000, saveRateMtx=False, initialSampleSeed=3,
+                                          nLeapFrogSteps=40, stepSize=0.02,  saveRateMtx=False, initialSampleSeed=3,
                                                             rfOptions=OptionClasses.RFSamplerOptions(
                                                                 trajectoryLength=trajectoryLength,
                                                                 refreshmentMethod=refreshmentMethod), dumpResultIteratively=True,dumpResultIterations=10, dir_name=dir_name)
