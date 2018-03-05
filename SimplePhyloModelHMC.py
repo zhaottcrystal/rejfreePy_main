@@ -120,7 +120,7 @@ print(trueExchangeCoef)
 # [2.7527184481647362, 1.6232287117730273, 0.31984199654874601, 2.9926928816680904, 0.8125636797020549, 0.081341438819008474, 0.034234981080808163, 0.23784619170668767, 2.6740785756861607, 3.679010975414601, 0.64264178800599125, 7.8762417929474466, 3.3626776006407701, 0.099309793742461433, 0.54989233610573274]
 
 ## generate data sequences of a CTMC with an un-normalized rate matrix
-
+seedGen = 1234567890
 if not provideSeq:
     ## Weight Generation
     prng = RandomState(seed)
@@ -154,9 +154,11 @@ if not provideSeq:
     with open(dataFileName, "rb") as f:
         dataRegime = pickle.load(f)
 else:
-    dataFileDirName = "nStates" + str(nStates) + "seedGenData" + str(seed) + "bt" + str(bt) + "nSeq" + str(nSeq) + "interLength" + str(interLength)
+    dataFileDirName = "nStates" + str(nStates) + "seedGenData" + str(seedGen) + "bt" + str(bt) + "nSeq" + str(nSeq) + "interLength" + str(interLength)
     os.chdir(dir_name)
     directory = dataFileDirName
+    print(directory)
+    print(os.getcwd())
     if not os.path.exists(directory):
         raise ValueError("The directory of the provided sequences does not exist")
     else:
