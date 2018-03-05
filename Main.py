@@ -52,7 +52,7 @@ parser.add_argument('-nSeq', action='store', dest='nSeq', type=int, default= 500
 ## store the time interval between two observation points
 parser.add_argument('-interLength', action='store', dest='interLength', type=float, default=1.0, help='store the interval length of two observation points in the time series')
 ## add the refreshment rate of lbps algorithm
-parser.add_argument('-refreshmentRate', action='store', dest='interLength', type=float, default=10, help='store the refreshment rate for the lbps algorithm')
+parser.add_argument('-refreshmentRate', action='store', dest='interLength', type=float, default=1, help='store the refreshment rate for the lbps algorithm')
 ## add the method we use to generate the initial weights
 parser.add_argument('-initialSamplesGenerateMethod', action='store', dest='initialSamplesMethod', default='Uniform', help='store the method used to generate the initial weights samples, the options include Uniform, Normal, Fixed, AssignedWeightsValues')
 ## add the initial univariate weights if we would like to provide initial weights
