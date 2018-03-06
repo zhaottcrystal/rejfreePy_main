@@ -62,7 +62,8 @@ parser.add_argument('-bivariateWeights', action='store', dest='biWeights', help 
 parser.add_argument('-refreshmentMethod', action='store', dest='refreshmentMethod', default= "LOCAL", type=OptionClasses.RefreshmentMethod.from_string, choices=list(OptionClasses.RefreshmentMethod))
 parser.add_argument('--provideSeq', action="store_true", dest='provideSeq', help='tell the program if the sequences have been generated')
 parser.add_argument('-batchSize', action='store', dest='batchSize', type=int, default=50, help='the batch size when updating the ergodic mean')
-
+parser.add_argument('-bivariateDict', action='store', dest='bivariateDict', choices=['customized10', 'customized6', 'chain'])
+parser.add_argument('-bivariateFeatDist', action='store', dest='bivariateFeatDist', default='Normal', choices=['Normal', 'Unif'])
 
 results = parser.parse_args()
 dir_name = results.dir_name
@@ -81,25 +82,42 @@ provideSeq = results.provideSeq
 seedGenData = results.seed
 nItersPerPathAuxVar = results.nItersPerPathAuxVar
 batchSize = results.batchSize
+bivariateDictStr = results.bivariateDict
+bivariateFeatDist = results.bivariateFeatDist
+
 
 if results.initialSamplesMethod is not None:
     initialWeightsDist = results.initialSamplesMethod
 else:
     initialWeightsDist = 'Fixed'
 
+bivariateFeatIndexDictionary = None
+nBivariateFeat = None
+if bivariateDictStr == 'customized10':
+    bivariateFeatIndexDictionary = HardCodedDictionaryUtils.getHardCodedDict10States()
+    nBivariateFeat = int(36)
+elif bivariateDictStr == 'customized6':
+    bivariateFeatIndexDictionary = HardCodedDictionaryUtils.getHardCodedDict()
+    nBivariateFeat = 12
+elif bivariateDictStr == 'chain':
+    bivariateFeatIndexDictionary = HardCodedDictionaryUtils.getHardCodedDictChainGraph(nStates)
+    nBivariateFeat = int(nStates * (nStates-1)/2)
 
 ####################################################
 if not provideSeq:
     ## Weight Generation
     prng = RandomState(seedGenData)
-    weightGenerationRegime = DataGenerationRegime.WeightGenerationRegime(nStates = nStates, nBivariateFeat= int(nStates *(nStates-1)/2), prng=prng)
+    weightGenerationRegime = DataGenerationRegime.WeightGenerationRegime(nStates = nStates, nBivariateFeat= nBivariateFeat, prng=prng)
     weightGenerationRegime.generateStationaryWeightsFromUniform()
-    weightGenerationRegime.generateBivariateWeightsFromNormal()
+    if bivariateFeatDist == "Unif":
+        weightGenerationRegime.generateBivariateWeightsFromUniform()
+    else:
+        weightGenerationRegime.generateBivariateWeightsFromNormal()
 
 ####################################################
     ## sequences data generation
 
-    dataRegime = DataGenerationRegime.DataGenerationRegime(nStates=nStates,  bivariateFeatIndexDictionary=HardCodedDictionaryUtils.getHardCodedDictChainGraph(nStates=nStates), btLength=bt, nSeq=nSeq, weightGenerationRegime=weightGenerationRegime, prng = prng, interLength=interLength)
+    dataRegime = DataGenerationRegime.DataGenerationRegime(nStates=nStates,  bivariateFeatIndexDictionary=bivariateFeatIndexDictionary, btLength=bt, nSeq=nSeq, weightGenerationRegime=weightGenerationRegime, prng = prng, interLength=interLength)
     ## generate the sequences data
     initialStateSeq = dataRegime.generatingInitialStateSeq()
     seqList = dataRegime.generatingSeq(initialStateSeq)
