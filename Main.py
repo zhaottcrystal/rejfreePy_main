@@ -62,7 +62,7 @@ parser.add_argument('-bivariateWeights', action='store', dest='biWeights', help 
 parser.add_argument('-refreshmentMethod', action='store', dest='refreshmentMethod', default= "LOCAL", type=OptionClasses.RefreshmentMethod.from_string, choices=list(OptionClasses.RefreshmentMethod))
 parser.add_argument('--provideSeq', action="store_true", dest='provideSeq', help='tell the program if the sequences have been generated')
 parser.add_argument('-batchSize', action='store', dest='batchSize', type=int, default=50, help='the batch size when updating the ergodic mean')
-parser.add_argument('-bivariateDict', action='store', dest='bivariateDict', choices=['customized10', 'customized6', 'chain'])
+parser.add_argument('-bivariateDict', action='store', dest='bivariateDict', default = 'chain', choices=['customized10', 'customized6', 'chain'])
 parser.add_argument('-bivariateFeatDist', action='store', dest='bivariateFeatDist', default='Normal', choices=['Normal', 'Unif'])
 
 results = parser.parse_args()
