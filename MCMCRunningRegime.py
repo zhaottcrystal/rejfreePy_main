@@ -262,6 +262,11 @@ class MCMCRunningRegime:
         previousStationaryDistMean = np.zeros((1, self.nStates))
         previousExchangeCoefMean = np.zeros((1, self.nExchange))
 
+        nInit = np.zeros(self.nStates)
+        unique, counts = np.unique(self.data[0][:, 0], return_counts=True)
+        nInitCount = np.asarray((unique, counts)).T
+        nInit[nInitCount[:, 0].astype(int)] = nInitCount[:, 1]
+
         for i in range(self.nMCMCIter):
             
             stationaryWeightsSamples[i, :] = initialStationaryWeights
@@ -302,7 +307,8 @@ class MCMCRunningRegime:
                 self.dumpResult(stationaryWeightsSamples[(i+1-self.dumpResultIterations):(i+1), :], allFileNames['stationaryWeights'])
 
 
-            nInit = np.zeros(self.nStates)
+
+
             holdTime = np.zeros(self.nStates)
             nTrans = np.zeros((self.nStates, self.nStates))
 
@@ -315,7 +321,7 @@ class MCMCRunningRegime:
 
                 suffStat = FullTrajectorGeneration.endPointSamplerSummarizeStatisticsOneBt(True, RandomState(int(i * self.dataGenerationRegime.nSeq + j)), initialRateMatrix,
                                                                        self.data[j], self.dataGenerationRegime.interLength)
-                nInit = nInit + suffStat['nInit']
+                # nInit = nInit + suffStat['nInit']
                 holdTime = holdTime + suffStat['holdTimes']
                 nTrans = nTrans + suffStat['nTrans']
 
