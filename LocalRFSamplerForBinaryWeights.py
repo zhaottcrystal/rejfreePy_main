@@ -59,8 +59,9 @@ def getPairOfStatesConnectedToEachDimOfBivariateWeights(nBivariateFeatWeightsDic
                     keyList.append(key)
                     result[i] = keyList
             else:
-                keyList.append(key)
-                result[np.asscalar(values)] = keyList
+                if i ==0:
+                    keyList.append(key)
+                    result[np.asscalar(values)] = keyList
 
     return result
 
