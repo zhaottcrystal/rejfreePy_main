@@ -27,6 +27,7 @@ import DataGenerationRegime
 import MCMCRunningRegime
 import OptionClasses
 import pickle
+import cProfile
 
 
 argv = sys.argv[1:]

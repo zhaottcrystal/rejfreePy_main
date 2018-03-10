@@ -11,7 +11,7 @@ import FullTrajectorGeneration
 import numpy as np
 import pickle
 import os
-
+import cProfile
 
 ## add command line argument
 ## list the arguments that we would like to provide to the code
@@ -193,7 +193,7 @@ if initialWeightsDist is not None:
         mcmcRegimeIteratively.run()
 
 else:
-    mcmcRegimeIteratively.run()
+    cProfile.run(mcmcRegimeIteratively.run())
 
 
 #"/Users/crystal/Dropbox/try/IterativelyTry"

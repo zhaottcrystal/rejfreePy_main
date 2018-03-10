@@ -8,26 +8,18 @@ import OptionClasses
 import ExpectedCompleteReversibleObjective
 import ExpectedCompleteReversibleModelBinaryFactors
 import HMC
-import LocalRFSamplerForBinaryWeights
+from LocalRFSamplerForBinaryWeights import LocalRFSamplerForBinaryWeights
 from PhyloLocalRFMove import PhyloLocalRFMove
 from ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
 import FullTrajectorGeneration
 import DataGenerationRegime
-# from main.OptionClasses import MCMCOptions
-# from main.OptionClasses import RFSamplerOptions
-# from main.ExpectedCompleteReversibleObjective import ExpectedCompleteReversibleObjective
-# from main.ExpectedCompleteReversibleModelBinaryFactors import ExpectedCompleteReversibleModelWithBinaryFactors
-# from main.HMC import HMC
-# from main.LocalRFSamplerForBinaryWeights import LocalRFSamplerForBinaryWeights
-# from main.PhyloLocalRFMove import PhyloLocalRFMove
-# from main.ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure import \
-#     ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
-# from main.FullTrajectorGeneration import endPointSamplerSummarizeStatisticsOneBt
 from datetime import datetime
 # from main.DataGenerationRegime import WeightGenerationRegime
 
 from numpy.random import RandomState
-
+from LocalRFSamplerForBinaryWeights import neighborVariableForAllFactors
+from LocalRFSamplerForBinaryWeights import neighbourVariblesAndFactorsAndExtendedNeighborsOfAllFactorsDict
+from LocalRFSamplerForBinaryWeights import getIndexOfNeighborFactorsForEachIndexOfBinaryFeature
 class MCMCRunningRegime:
 
     def __init__(self, dataGenerationRegime, nMCMCIter, thinning, burnIn, onlyHMC, HMCPlusBPS, prng=None, nLeapFrogSteps=40,
@@ -87,6 +79,9 @@ class MCMCRunningRegime:
         self.refreshmentMethod = refreshmentMethod
         self.nExchange = int(self.nStates * (self.nStates-1)/2)
         self.batchSize = batchSize
+        self.neighborVariablesForAllFactors = None
+        self.variableAndFactorInfo = None
+        self.indexOfFactorsForEachBivariateFeat = None
 
 
     def generateFixedInitialWeights(self):
@@ -267,6 +262,7 @@ class MCMCRunningRegime:
         nInitCount = np.asarray((unique, counts)).T
         nInit[nInitCount[:, 0].astype(int)] = nInitCount[:, 1]
 
+
         for i in range(self.nMCMCIter):
             
             stationaryWeightsSamples[i, :] = initialStationaryWeights
@@ -357,8 +353,16 @@ class MCMCRunningRegime:
                                                                          self.bivariateFeatIndexDictionary)
                 ## define the sampler to use
                 ## local sampler to use
-                localSampler = LocalRFSamplerForBinaryWeights.LocalRFSamplerForBinaryWeights(model, self.rfOptions, self.mcmcOptions, self.nStates,
-                                                              self.bivariateFeatIndexDictionary)
+                if i == 0:
+                    self.neighborVariablesForAllFactors = neighborVariableForAllFactors(self.nStates, model.localFactors,
+                                                                                   self.bivariateFeatIndexDictionary)
+                    self.variableAndFactorInfo = neighbourVariblesAndFactorsAndExtendedNeighborsOfAllFactorsDict(self.nStates, model.localFactors, self.bivariateFeatIndexDictionary,self.nBivariateFeat)
+                    self.indexOfFactorsForEachBivariateFeat = getIndexOfNeighborFactorsForEachIndexOfBinaryFeature(self.bivariateFeatIndexDictionary,
+                                                         self.nBivariateFeat, model.localFactors)
+
+                localSampler = LocalRFSamplerForBinaryWeights(model, self.rfOptions, self.mcmcOptions, self.nStates,
+                                                              self.neighborVariablesForAllFactors, self.variableAndFactorInfo, self.indexOfFactorsForEachBivariateFeat)
+
                 phyloLocalRFMove = PhyloLocalRFMove(model=model, sampler=localSampler, initialPoints=initialBinaryWeights, options=self.rfOptions, prng=RandomState(i))
                 initialBinaryWeights = phyloLocalRFMove.execute()
 

@@ -13,8 +13,8 @@ import os
 #os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/")
 
 import numpy as np
-import SojournTimeFactorWithoutPiEstWithBinaryFactors
-import TransitionCountWithoutPiWithBinaryFactors
+from SojournTimeFactorWithoutPiEstWithBinaryFactors import SojournTimeFactorWithoutPiEstWithBinaryFactors
+from TransitionCountWithoutPiWithBinaryFactors import TransitionCountFactorWithoutPiEstWithBinaryFactors
 import NormalFactor
 
 
@@ -30,7 +30,6 @@ def addLocalFactors(nStates, expectedCompleteReversibleObjective, bivariateWeigh
     localFactors = []
     wholeStates = np.arange(0, int(nStates))
 
-    ## ToDo: implement the normal distribution factors
     ## add all prior normal distribution factors for each bivariateWeights
     dim = len(bivariateWeights)
     for i in range(dim):
@@ -41,14 +40,14 @@ def addLocalFactors(nStates, expectedCompleteReversibleObjective, bivariateWeigh
     for state0 in range(nStates):
         support = np.setdiff1d(wholeStates, state0)
         for state1 in support:
-            collisionFactor = SojournTimeFactorWithoutPiEstWithBinaryFactors.SojournTimeFactorWithoutPiEstWithBinaryFactors(expectedCompleteReversibleObjective, state0, state1, nStates, bivariateWeights, stationaryDist, bivariateFeatIndexDictionary)
+            collisionFactor = SojournTimeFactorWithoutPiEstWithBinaryFactors(expectedCompleteReversibleObjective, state0, state1, nStates, bivariateWeights, stationaryDist, bivariateFeatIndexDictionary)
             localFactors.append(collisionFactor)
 
     ## add all transition count factors
     for state0 in range(nStates):
         support = np.setdiff1d(wholeStates, state0)
         for state1 in support:
-            collisionFactor = TransitionCountWithoutPiWithBinaryFactors.TransitionCountFactorWithoutPiEstWithBinaryFactors(expectedCompleteReversibleObjective, state0, state1, nStates, bivariateWeights, stationaryDist, bivariateFeatIndexDictionary)
+            collisionFactor = TransitionCountFactorWithoutPiEstWithBinaryFactors(expectedCompleteReversibleObjective, state0, state1, nStates, bivariateWeights, stationaryDist, bivariateFeatIndexDictionary)
             localFactors.append(collisionFactor)
     return localFactors
 

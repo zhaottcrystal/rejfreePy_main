@@ -158,11 +158,72 @@ def neighbourVariables(nStates, collisionFactor, nBivariateFeatWeightsDictionary
             result.append(np.asscalar(values))
         return result
 
+
+
 def neighborVariableForAllFactors(nStates, allFactors, nBivariateFeatWeightsDictionary):
     result = OrderedDict()
+    ## change dictionary key from using factor to use the index of the factor
     for index, factor in enumerate(allFactors):
-        result[factor] = neighbourVariables(nStates, factor, nBivariateFeatWeightsDictionary)
+        result[index] = neighbourVariables(nStates, factor, nBivariateFeatWeightsDictionary)
     return result
+
+def getIndexOfNeighborFactorsForEachIndexOfBinaryFeature(nBivariateFeatWeightsDictionary,
+                                                         nBivariateFeatures, allFactors):
+    result = dict()
+    for i in range(nBivariateFeatures):
+        values = getIndexOfNeighborFactorsGivenIndexOfBinaryFeature(i,
+                                                                    nBivariateFeatWeightsDictionary,
+                                                                    nBivariateFeatures, allFactors)
+        result[i] = values
+    return result
+
+
+
+def neighbourVariblesAndFactorsAndExtendedNeighborsOfAllFactorsDict(nStates, allFactors, nBivariateFeatWeightsDictionary, nBivariateFeatures):
+
+    immediateNeighborVariablesIndexForAllFactors = OrderedDict()
+    neighborFactorListForAllFactors = OrderedDict()
+    extendedNeighborVariablesIndexForAllFactors = OrderedDict()
+
+    for indexOfFactor, factor in enumerate(allFactors):
+        immediateNeighborVariablesIndexInTest = neighbourVariables(nStates, factor,
+                                                                nBivariateFeatWeightsDictionary)
+        immediateNeighborVariablesIndexForAllFactors[indexOfFactor] = immediateNeighborVariablesIndexInTest
+        neighborFactorList = list()
+        for immediateVariable in immediateNeighborVariablesIndexInTest:
+            values = getIndexOfNeighborFactorsGivenIndexOfBinaryFeature(immediateVariable,
+                                                                        nBivariateFeatWeightsDictionary,
+                                                                        nBivariateFeatures, allFactors)
+            if len(np.atleast_1d(values)) > 1:
+                neighborFactorList.extend(values)
+            else:
+                neighborFactorList.append(np.asscalar(values))
+
+        if len(np.atleast_1d(neighborFactorList)) > 1:
+            neighborFactorList = list(set(neighborFactorList))
+
+        neighborFactorListForAllFactors[indexOfFactor] = neighborFactorList
+
+        extendedNeighborVariablesIndex = list()
+        for index in neighborFactorList:
+            currentNeighborVariables = neighbourVariables(nStates, allFactors[index],
+                                                            nBivariateFeatWeightsDictionary)
+            extendedNeighborVariablesIndex.extend(currentNeighborVariables)
+
+        ## remove duplicate elements
+        if len(extendedNeighborVariablesIndex) > 1:
+            extendedNeighborVariablesIndex = list(set(extendedNeighborVariablesIndex))
+
+        extendedNeighborVariablesIndexForAllFactors[indexOfFactor] = extendedNeighborVariablesIndex
+
+    result = {}
+    result['neighborVariablesAll'] = immediateNeighborVariablesIndexForAllFactors
+    result['neighborFactorsAll'] = neighborFactorListForAllFactors
+    result['extendedVariablesAll'] = extendedNeighborVariablesIndexForAllFactors
+    return result
+
+
+
 
 
 # ## check the correctness of all the previous methods
@@ -202,7 +263,7 @@ def neighborVariableForAllFactors(nStates, allFactors, nBivariateFeatWeightsDict
 class LocalRFSamplerForBinaryWeights:
     """Make model a class of ExpectedCompleteReversibleModel"""
 
-    def __init__(self, model, rfOptions, mcmcOptions, nStates, nBivariateFeatWeightsDictionary):
+    def __init__(self, model, rfOptions, mcmcOptions, nStates,  neighborVariableForAllFactors, variableAndFactorInfo, indexOfFactorsForEachBivariateFeat):
         self.model = model
         self.rfOptions = rfOptions
         self.mcmcOptions = mcmcOptions
@@ -220,13 +281,14 @@ class LocalRFSamplerForBinaryWeights:
 
         self.nBivariateFeatWeightsDictionary = model.bivariateFeatIndexDictionary
         self.nBivariateFeatures = len(model.variables)
-        self.neighborVariablesForAllFactors = neighborVariableForAllFactors(nStates, self.allFactors, nBivariateFeatWeightsDictionary)
+        self.neighborVariablesForAllFactors = neighborVariableForAllFactors
 
         ## neighborVariable, neighborFactors and extendedVariable information for all factors
-        self.variableAndFactorInfo = self.neighbourVariblesAndFactorsAndExtendedNeighborsOfAllFactorsDict()
-        self.neighborVariablesForAllFactors = self.variableAndFactorInfo['neighborVariablesAll']
-        self.neighborFactorsAll = self.variableAndFactorInfo['neighborFactorsAll']
-        self.extendedVariablesAll = self.variableAndFactorInfo['extendedVariablesAll']
+        self.variableAndFactorInfo = variableAndFactorInfo
+        self.neighborVariablesForAllFactors = variableAndFactorInfo['neighborVariablesAll']
+        self.neighborFactorsAll = variableAndFactorInfo['neighborFactorsAll']
+        self.extendedVariablesAll = variableAndFactorInfo['extendedVariablesAll']
+        self.indexOfFactorsForEachBivariateFeat = indexOfFactorsForEachBivariateFeat
 
 
 
@@ -280,7 +342,8 @@ class LocalRFSamplerForBinaryWeights:
             newVelocityCoordinate = newVelocity[i]
             self.updateTrajectory(collisionTime, i, newVelocityCoordinate)
 
-    def updateCandidateCollision(self, prng,  collisionFactor, currentTime):
+    def updateCandidateCollision(self, prng,  collisionFactorIndex, currentTime):
+        collisionFactor = self.allFactors[collisionFactorIndex]
         self.collisionQueue.remove(collisionFactor)
         context = CollisionContext(prng, self.getVelocityMatrix(collisionFactor))
 
@@ -303,7 +366,8 @@ class LocalRFSamplerForBinaryWeights:
                 candidateCollisionTime) + ' was moved to' + ' ' + str(candidateCollisionTime + epsilon))
             candidateCollisionTime += epsilon
 
-        self.collisionQueue.add(collisionFactor, candidateCollisionTime)
+        self.collisionQueue.add(collisionFactorIndex, candidateCollisionTime)
+        # self.collisionQueue.add(collisionFactor, candidateCollisionTime)
 
     def neighbourVariblesAndFactorsAndExtendedNeighborsOfAllFactorsDict(self):
 
@@ -354,15 +418,16 @@ class LocalRFSamplerForBinaryWeights:
         collision = self.collisionQueue.pollEvent()
         ## get the key values of the popitem of collisionQueue where collision is a pair with keys and values
         collisionTime = collision[0]
-        collisionFactor = collision[1]
+        collisionFactorIndex = collision[1]
+        collisionFactor = self.allFactors[collisionFactorIndex]
         ## print("The collision factor is" + collisionFactor)
 
         isActualCollision = self.isCollisionMap[collisionFactor]
 
         ## get the variables connected to the current factor
-        immediateNeighborVariablesIndex = self.neighborVariablesForAllFactors[collisionFactor]
-        neighborFactorList = self.neighborFactorsAll[collisionFactor]
-        extendedNeighborVariablesIndex = self.extendedVariablesAll[collisionFactor]
+        immediateNeighborVariablesIndex = self.neighborVariablesForAllFactors[collisionFactorIndex]
+        neighborFactorList = self.neighborFactorsAll[collisionFactorIndex]
+        extendedNeighborVariablesIndex = self.extendedVariablesAll[collisionFactorIndex]
 
         self.nCollisions += 1
         self.nCollidedVariables += len(np.atleast_1d(immediateNeighborVariablesIndex))
@@ -375,10 +440,9 @@ class LocalRFSamplerForBinaryWeights:
 
         if isActualCollision:
             for i in neighborFactorList:
-                factor = self.allFactors[i]
-                self.updateCandidateCollision(prng, factor, collisionTime)
+                self.updateCandidateCollision(prng, i, collisionTime)
         else:
-            self.updateCandidateCollision(prng, collisionFactor, np.asscalar(collisionTime))
+            self.updateCandidateCollision(prng, collisionFactorIndex, np.asscalar(collisionTime))
 
 
     def localVelocityRefreshment(self, prng, refreshmentTime):
@@ -409,9 +473,12 @@ class LocalRFSamplerForBinaryWeights:
 
         neighborFactors = list()
         for immediateVariable in immediateNeighborVariablesIndex:
-            values = getIndexOfNeighborFactorsGivenIndexOfBinaryFeature(immediateVariable,
-                                                                        self.nBivariateFeatWeightsDictionary,
-                                                                        self.nBivariateFeatures, self.allFactors)
+            ## ToDo: cache the results instead of evaluating it every time when updating the velocities
+            values = self.indexOfFactorsForEachBivariateFeat[immediateVariable]
+
+                #getIndexOfNeighborFactorsGivenIndexOfBinaryFeature(immediateVariable,
+                #                                                        self.nBivariateFeatWeightsDictionary,
+                #                                                        self.nBivariateFeatures, self.allFactors)
             neighborFactors.extend(values)
         if len(neighborFactors) > 1:
             neighborFactors = list(set(neighborFactors))
@@ -419,8 +486,11 @@ class LocalRFSamplerForBinaryWeights:
         ## get the variables connected to the neighbor factors
         extendedNeighborVariablesIndex = list()
         for index in neighborFactors:
-            neighborVariables = neighbourVariables(self.nStates, self.allFactors[index],
-                                                   self.nBivariateFeatWeightsDictionary)
+            ## ToDo: cache the results, intead of evaluating it every time when updating the velocities
+            neighborVariables = self.neighborVariablesForAllFactors[index]
+
+                #neighbourVariables(self.nStates, self.allFactors[index],
+                #                                   self.nBivariateFeatWeightsDictionary)
             extendedNeighborVariablesIndex.extend(neighborVariables)
 
         if len(extendedNeighborVariablesIndex) > 1:
@@ -467,7 +537,7 @@ class LocalRFSamplerForBinaryWeights:
         ## 3-recompute the collisions for the other factors touching the variables (including the one we just popped)
         for element in neighborFactors:
             factor = self.allFactors[element]
-            self.updateCandidateCollision(prng, factor, np.asscalar(refreshmentTime))
+            self.updateCandidateCollision(prng, element, np.asscalar(refreshmentTime))
 
 
     def globalVelocityRefreshment(self, prng,  refreshmentTime, initializing):
@@ -514,8 +584,8 @@ class LocalRFSamplerForBinaryWeights:
                     self.trajectories[i].t = refreshmentTime
                     self.trajectories[i].velocity_t = currentVelocity
 
-        for factor in self.allFactors:
-            self.updateCandidateCollision(prng, factor, refreshmentTime)
+        for indexOfFactor, factor in enumerate(self.allFactors):
+            self.updateCandidateCollision(prng, indexOfFactor, refreshmentTime)
 
     def iterate(self, prng,  maxNumberOfIterations, maxTrajectoryLen, maxTimeMilli=sys.maxsize):
         # randomState is the state of the "random" pseudo number generator, it is obtained by first setting the
