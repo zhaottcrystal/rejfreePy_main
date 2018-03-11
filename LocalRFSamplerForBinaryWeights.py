@@ -525,7 +525,6 @@ class LocalRFSamplerForBinaryWeights:
         if len(np.atleast_1d(immediateNeighborVariablesIndex)) > 1:
             for variableIndex in immediateNeighborVariablesIndex:
                 self.trajectories[variableIndex].velocity_t = newVelocity[int(d)]
-                # self.updateTrajectory(refreshmentTime, variable, newVelocity[int(d)])
                 d += 1
         else:
             self.trajectories[immediateNeighborVariablesIndex[0]].velocity_t = newVelocity[int(d)]
