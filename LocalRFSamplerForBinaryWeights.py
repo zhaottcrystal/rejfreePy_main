@@ -344,7 +344,7 @@ class LocalRFSamplerForBinaryWeights:
 
     def updateCandidateCollision(self, prng,  collisionFactorIndex, currentTime):
         collisionFactor = self.allFactors[collisionFactorIndex]
-        self.collisionQueue.remove(collisionFactor)
+        self.collisionQueue.remove(collisionFactorIndex)
         context = CollisionContext(prng, self.getVelocityMatrix(collisionFactor))
 
         collisionInfo = collisionFactor.getLowerBoundForCollisionDeltaTime(context)
@@ -440,7 +440,7 @@ class LocalRFSamplerForBinaryWeights:
 
         if isActualCollision:
             for i in neighborFactorList:
-                self.updateCandidateCollision(prng, i, collisionTime)
+                 self.updateCandidateCollision(prng, i, collisionTime)
         else:
             self.updateCandidateCollision(prng, collisionFactorIndex, np.asscalar(collisionTime))
 
@@ -451,18 +451,17 @@ class LocalRFSamplerForBinaryWeights:
         ## sample the index of the factor
         #ind = int(np.asscalar(prng.randint(0, len(np.atleast_1d(allFactors)), 1)))
         ind = int(np.asscalar(np.random.randint(0, len(np.atleast_1d(allFactors)), 1)))
-        f = allFactors[ind]  ## f is a collision factor
 
         ## using the cached results for all factors
-        immediateNeighborVariablesIndex = self.neighborVariablesForAllFactors[f]
+        immediateNeighborVariablesIndex = self.neighborVariablesForAllFactors[ind]
 
         if len(np.atleast_1d(immediateNeighborVariablesIndex)) == 1:
             increasedNeighborhood = set()
             increasedNeighborhood.update(immediateNeighborVariablesIndex)
 
             #f2 = allFactors[int(np.asscalar(prng.randint(0, len(allFactors), 1)))]
-            f2 = allFactors[int(np.asscalar(np.random.randint(0, len(allFactors), 1)))]
-            immediateNeighborVariablesIndex2 = self.neighborVariablesForAllFactors[f2]
+            f2Index = int(np.asscalar(np.random.randint(0, len(allFactors), 1)))
+            immediateNeighborVariablesIndex2 = self.neighborVariablesForAllFactors[f2Index]
 
             increasedNeighborhood.update(immediateNeighborVariablesIndex2)
 
@@ -641,7 +640,7 @@ class LocalRFSamplerForBinaryWeights:
                     self.globalVelocityRefreshment(prng, nextRefreshmentTimeCopy, False)
                 nextRefreshmentTime += np.random.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
                 #nextRefreshmentTime += prng.exponential(scale=1 / self.rfOptions.refreshRate, size=1)
-            #print(self.currentTime)
+            print(self.currentTime)
             print(i)
 
         # self.model.variables = self.updateAllVariables(self.currentTime)
