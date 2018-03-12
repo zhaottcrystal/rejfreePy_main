@@ -380,7 +380,7 @@ class ExactInvarianceTest:
         parser.add_argument('-dir_name', action='store', dest='dir_name', type=str,
                             help='store the directory name to save the csv files')
 
-        nStates = 5
+        nStates = 4
         bivariateFeatDictionary = HardCodedDictionaryUtils.getHardCodedDictChainGraph(nStates)
         nLeapFrogSteps = 40
         stepSize = 0.002
@@ -391,7 +391,7 @@ class ExactInvarianceTest:
         nMCMCIters = int(1)
         mcmcOptions = MCMCOptions(nMCMCIters, 1, 0)
 
-        M = 300
+        M = 150
         K = 200
         nExchangeCoef = int(nStates * (nStates - 1) / 2)
         nSeq=150
