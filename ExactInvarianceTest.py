@@ -16,6 +16,9 @@ from OptionClasses import RefreshmentMethod
 
 import argparse
 
+from LocalRFSamplerForBinaryWeights import neighborVariableForAllFactors
+from LocalRFSamplerForBinaryWeights import neighbourVariblesAndFactorsAndExtendedNeighborsOfAllFactorsDict
+from LocalRFSamplerForBinaryWeights import getIndexOfNeighborFactorsForEachIndexOfBinaryFeature
 
 
 def getExchangeCoef(nStates, binaryWeights, bivariateFeatDictionary):
@@ -30,7 +33,6 @@ def getExchangeCoef(nStates, binaryWeights, bivariateFeatDictionary):
                 exchangeList.append(np.exp(np.sum(np.take(binaryWeights, bivariateFeatDictionary[keyPair]))))
     return exchangeList
 
-
 class ExactInvarianceTest:
 
     def __init__(self, nPriorSamples,nParam, K=1000):
@@ -40,6 +42,9 @@ class ExactInvarianceTest:
         self.nParam = nParam
         self.priorSeed = np.arange(0, nPriorSamples, 1)
         self.K = K
+        self.neighborVariablesForAllFactors = None
+        self.variableAndFactorInfo = None
+        self.indexOfFactorsForEachBivariateFeat = None
 
 
 
@@ -282,8 +287,16 @@ class ExactInvarianceTest:
                 ## define the sampler to use
                 ## local sampler to use
 
-                localSampler = LocalRFSamplerForBinaryWeights(model, rfOptions, mcmcOptions, nStates,
-                                                            bivariateFeatDictionary)
+                if i == 1:
+                    self.neighborVariablesForAllFactors = neighborVariableForAllFactors(nStates, model.localFactors,
+                                                                                   model.bivariateFeatIndexDictionary)
+                    self.variableAndFactorInfo = neighbourVariblesAndFactorsAndExtendedNeighborsOfAllFactorsDict(nStates, model.localFactors, model.bivariateFeatIndexDictionary,nBivariateFeat)
+                    self.indexOfFactorsForEachBivariateFeat = getIndexOfNeighborFactorsForEachIndexOfBinaryFeature(model.bivariateFeatIndexDictionary,
+                                                         nBivariateFeat, model.localFactors)
+
+                localSampler = LocalRFSamplerForBinaryWeights(model, rfOptions, mcmcOptions, nStates, self.neighborVariablesForAllFactors,
+                                                              self.variableAndFactorInfo, self.indexOfFactorsForEachBivariateFeat)
+
                 phyloLocalRFMove = PhyloLocalRFMove(model=model, sampler=localSampler, initialPoints=thetaBinaryWeights, options=rfOptions, prng=RandomState(i))
                 thetaBinaryWeights = phyloLocalRFMove.execute()
                 theta0BinaryWeightsSamples[i, :] = thetaBinaryWeights
