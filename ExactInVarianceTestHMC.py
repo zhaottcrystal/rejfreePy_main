@@ -380,7 +380,7 @@ class ExactInvarianceTestHMC:
         parser.add_argument('-dir_name', action='store', dest='dir_name', type=str,
                             help='store the directory name to save the csv files')
 
-        nStates = 4
+        nStates = 5
         bivariateFeatDictionary = HardCodedDictionaryUtils.getHardCodedDictChainGraph(nStates)
         nLeapFrogSteps = 40
         stepSize = 0.002
