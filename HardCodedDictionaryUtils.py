@@ -1,5 +1,7 @@
 import numpy as np
 from collections import OrderedDict
+from AminoAcidDict import getBivariateFeatGivenAllAminoAcidPairs
+from AminoAcidsDistUtilities import AminoAcidsUtilities
 
 def getHardCodedDict():
     HardCodedDict = OrderedDict()
@@ -171,8 +173,32 @@ def getHardCodedDictChainGraph(nStates):
     return HardCodedDict
 
 
+def getHardCodedDictPolaritySizeGraph():
+    return getBivariateFeatGivenAllAminoAcidPairs()
+
+
+def getHardCodedDictFromAminoAcidDistRankPairs():
+    aminoAcidUtilities = AminoAcidsUtilities()
+    result = aminoAcidUtilities.rankAminoAcidsPairs()
+    HardCodedDict = OrderedDict()
+    ## loop over all the keys
+    for k in result.keys():
+
+        featIndex = result[k]
+        if featIndex ==0:
+            HardCodedDict[k] = np.array(featIndex, dtype= np.int)
+        else:
+            HardCodedDict[k] = np.array(((featIndex-1), featIndex), dtype= np.int)
+
+    return HardCodedDict
+
+
+
 def test():
     ## test the correctness of getHardCodedDictChainGraph()
+    dictAccordingToAminoAcidDistOrder = getHardCodedDictFromAminoAcidDistRankPairs()
+    print(dictAccordingToAminoAcidDistOrder[(9, 10)])
+    print(dictAccordingToAminoAcidDistOrder)
 
     dictFor15States = getHardCodedDictChainGraph(15)
     key1 = (0, 14)

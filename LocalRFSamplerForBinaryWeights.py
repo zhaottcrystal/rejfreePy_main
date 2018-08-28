@@ -439,7 +439,7 @@ class LocalRFSamplerForBinaryWeights:
             self.collideTrajectories(collisionFactor, collisionTime)
 
         if isActualCollision:
-            for i in neighborFactorList:
+            for i in np.atleast_1d(neighborFactorList):
                  self.updateCandidateCollision(prng, i, collisionTime)
         else:
             self.updateCandidateCollision(prng, collisionFactorIndex, np.asscalar(collisionTime))
@@ -475,10 +475,7 @@ class LocalRFSamplerForBinaryWeights:
             ## ToDo: cache the results instead of evaluating it every time when updating the velocities
             values = self.indexOfFactorsForEachBivariateFeat[immediateVariable]
 
-                #getIndexOfNeighborFactorsGivenIndexOfBinaryFeature(immediateVariable,
-                #                                                        self.nBivariateFeatWeightsDictionary,
-                #                                                        self.nBivariateFeatures, self.allFactors)
-            neighborFactors.extend(values)
+            neighborFactors.extend(np.atleast_1d(values))
         if len(neighborFactors) > 1:
             neighborFactors = list(set(neighborFactors))
 
@@ -534,7 +531,6 @@ class LocalRFSamplerForBinaryWeights:
 
         ## 3-recompute the collisions for the other factors touching the variables (including the one we just popped)
         for element in neighborFactors:
-            factor = self.allFactors[element]
             self.updateCandidateCollision(prng, element, np.asscalar(refreshmentTime))
 
 

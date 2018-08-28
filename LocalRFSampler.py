@@ -16,9 +16,10 @@ import datetime as dt
 from collections import OrderedDict  ## OrderedDict is equivalent to LinkedHashMap in java
 import EventQueue
 import TrajectoryRay
-import CollisionContext
+from CollisionContext import CollisionContext
 import Utils
 import OptionClasses
+from OptionClasses import RefreshmentMethod
 
 
 #from main.EventQueue import EventQueue

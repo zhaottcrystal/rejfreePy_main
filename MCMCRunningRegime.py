@@ -25,7 +25,7 @@ class MCMCRunningRegime:
     def __init__(self, dataGenerationRegime, nMCMCIter, thinning, burnIn, onlyHMC, HMCPlusBPS, prng=None, nLeapFrogSteps=40,
                  stepSize=0.02, saveRateMtx = False, initialSampleSeed=None, rfOptions=None,
                  dumpResultIteratively=False, dumpResultIterations = 50, dir_name=os.getcwd(), nItersPerPathAuxVar=1000,
-                 initialSampleDist="Fixed", refreshmentMethod= OptionClasses.RefreshmentMethod.LOCAL, batchSize=50):
+                 initialSampleDist="Fixed", refreshmentMethod= OptionClasses.RefreshmentMethod.LOCAL, batchSize=50, unknownTrueRateMtx = True):
         if prng is None:
             self.prng = dataGenerationRegime.prng
         else:
@@ -56,13 +56,11 @@ class MCMCRunningRegime:
         self.data = dataGenerationRegime.data
         self.nStates = dataGenerationRegime.nStates
         self.bivariateFeatIndexDictionary = dataGenerationRegime.bivariateFeatIndexDictionary
-        self.nBivariateFeat = len(dataGenerationRegime.bivariateWeights)
+        self.nBivariateFeat = dataGenerationRegime.nBivariateFeat
         if HMCPlusBPS:
             self.samplingMethod = "HMCPlusBPS"
         if onlyHMC:
             self.samplingMethod = "HMC"
-
-        self.trajectoryLength = self.rfOptions.trajectoryLength
 
         if initialSampleSeed is not None:
             self.initialSampleSeed = initialSampleSeed
@@ -82,6 +80,7 @@ class MCMCRunningRegime:
         self.neighborVariablesForAllFactors = None
         self.variableAndFactorInfo = None
         self.indexOfFactorsForEachBivariateFeat = None
+        self.unknownTrueRateMtx = unknownTrueRateMtx
 
 
     def generateFixedInitialWeights(self):
@@ -179,7 +178,8 @@ class MCMCRunningRegime:
             stationaryDistSamples = np.zeros((nMCMCIters, nStates))
             stationaryWeightsSamples = np.zeros((nMCMCIters, nStates))
             binaryWeightsSamples = np.zeros((nMCMCIters, nBivariateFeat))
-            exchangeableSamples = np.zeros((nMCMCIters, len(self.dataGenerationRegime.exchangeCoef)))
+
+            exchangeableSamples = np.zeros((nMCMCIters, int(self.dataGenerationRegime.nStates * (self.dataGenerationRegime.nStates-1)/2)))
             rateMatrixSamples = np.zeros((nMCMCIters, nStates, nStates))
             result['weightSamples'] = weightSamples
             result['avgWeights'] = avgWeights
@@ -221,7 +221,8 @@ class MCMCRunningRegime:
         exchangeCoefBatchSum = np.zeros((1, self.nExchange))
         
         ## output the true stationary distribution and exchangeable parameters
-        self.outputTrueParameters(self.dir_name)
+        if self.unknownTrueRateMtx is False:
+            self.outputTrueParameters(self.dir_name)
 
         # call methods to create initial samples
         initialSamples = self.generateInitialSamples(initialWeightsDist=self.initialWeightDist, uniWeightsValues=uniWeightsValues, biWeightsValues=biWeightsValues)
@@ -417,7 +418,7 @@ class MCMCRunningRegime:
         if not isinstance(samplingMethod, str):
             samplingMethod = str(samplingMethod)
         if not isinstance(nMCMCIter, str):
-            nMCMCIter= str(nMCMCIter)
+            nMCMCIter = str(nMCMCIter)
         timeStr = time_base_filename+samplingMethod+nMCMCIter+str(self.nStates)
         if self.samplingMethod == "HMCPlusBPS":
             timeStr = timeStr + "trajectoryLength" + str(self.trajectoryLength) + "refreshementMethod" + self.refreshmentMethod.name

@@ -28,9 +28,9 @@ class NormalFactor(CollisionFactor.CollisionFactor):
 
     def normalCollisionTime(self, exponential, xv, vv):
         if xv > 0:
-            result = -xv/vv + np.sqrt(xv * xv+ vv*exponential)/vv
+            result = -xv/vv + np.sqrt(xv * xv+ 2*vv*exponential)/vv
         else:
-            result = -xv/vv + np.sqrt(vv*exponential)/vv
+            result = -xv/vv + np.sqrt(2*vv*exponential)/vv
         return result
 
 

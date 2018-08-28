@@ -54,6 +54,23 @@ class WeightGenerationRegime:
 
 
 
+class DataObsPairSeqs:
+    def __init__(self, nStates, bivariateFeatIndexDictionary, nBivariateFeat, btLength, nSeq, data = None, weightGenerationRegime = None, interLength=1.0):
+        self.nStates = nStates
+        self.bivariateFeatIndexDictionary = bivariateFeatIndexDictionary
+        self.bt = btLength
+        self.interLength = interLength
+        self.nSeq = nSeq
+        self.data = data
+        self.nPairSeq = 1
+        self.weightGenerationRegime = weightGenerationRegime
+        self.nBivariateFeat = nBivariateFeat
+        self.prng = RandomState(defaultSeed)
+
+
+
+
+
 
 
 class DataGenerationRegime:
@@ -97,6 +114,7 @@ class DataGenerationRegime:
         self.data = None
         self.suffStat = None
         self.nPairSeq = None
+        self.nBivariateFeat = len(self.bivariateWeights)
 
 
     def generatingInitialStateSeq(self):
@@ -153,5 +171,47 @@ class DataGenerationRegime:
         self.data = firstLastStatesArrayAll
 
         return firstLastStatesArrayAll
+
+
+
+    def summaryFirstLastStatesArrayIntoMatrix(self, firstLastStateArrayAll, nStates):
+        """
+
+        :param firstLastStateArrayAll: the observation time series stored in a list,
+                each element of the list is an array, two columns, number of rows
+                represents the number of sequences. For each row, the first element
+                represents the starting state and the last element represents the
+                observed states after a unit time interval length
+
+        :param nStates: the number of states
+        :return: a dictionary with two elements: nInit records the initial count of the states
+                                                 count records the counts of all pairs starting and ending states
+        """
+        count = np.zeros((nStates, nStates))
+        ## loop over all columns and all rows to get the count matrix
+        ## check the form of firstLastStatesArrayAll to see how to write the loop
+
+        nInit = np.zeros(self.nStates)
+        unique, counts = np.unique(firstLastStateArrayAll[0][:, 0], return_counts=True)
+        nInitCount = np.asarray((unique, counts)).T
+        nInit[nInitCount[:, 0].astype(int)] = nInitCount[:, 1]
+
+        nSeq = firstLastStateArrayAll[0].shape[0]
+        for i in range(len(firstLastStateArrayAll)):
+            pairSeq = firstLastStateArrayAll[i]
+            for j in range(nSeq):
+                startState = pairSeq[j][0]
+                endState = pairSeq[j][1]
+                count[int(startState)][int(endState)] = count[int(startState)][int(endState)] + 1
+
+        result = dict()
+        result['nInit'] = nInit
+        result['count'] = count
+        return result
+
+
+
+
+
 
 

@@ -52,6 +52,36 @@ def addLocalFactors(nStates, expectedCompleteReversibleObjective, bivariateWeigh
     return localFactors
 
 
+
+def addLocalNormalFactors(weights):
+    localFactors = []
+    dim = len(weights)
+    for i in range(dim):
+        normalFactor = NormalFactor.NormalFactor(weights, dim, i)
+        localFactors.append(normalFactor)
+    return localFactors
+
+
+class ModelWithNormalFactors:
+    def __init__(self, weights):
+        self.variables = weights
+        self.localFactors = self.localFactors(weights)
+        self.bivariateFeatIndexDictionary  = None
+
+
+    def nVariables(self):
+        return len(self.variables)
+
+    def localFactors(self, weights):
+        self.localFactors = addLocalNormalFactors(weights)
+        return self.localFactors
+
+
+
+
+
+
+
 class ExpectedCompleteReversibleModelWithBinaryFactors:
 
     def __init__(self, expectedCompleteReversibleObjective, nStates, bivariateWeights, stationaryDist, bivariateFeatIndexDictionary):

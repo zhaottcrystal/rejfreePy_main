@@ -13,11 +13,18 @@ import numpy as np
 import os
 #os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy/main/")
 from ReversibleRateMtxPiAndExchangeGTR import ReversibleRateMtxPiAndExchangeGTR
-import FullTrajectorGeneration
-import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
-import HardCodedDictionaryUtils
-
-#
+from FullTrajectorGeneration import generateFullPathUsingRateMtxAndStationaryDist
+from FullTrajectorGeneration import getFirstAndLastStateOfListOfSeq
+from ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure import ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure
+from HardCodedDictionaryUtils import getHardCodedDict
+from scipy.linalg import expm
+from RateMtxExpectations import RateMtxExpectations
+from copy import deepcopy
+from numpy.random import RandomState
+from DataGenerationRegime import DataGenerationRegime
+from Path import Path
+from EndPointSampler import EndPointSampler
+from PathStatistics import PathStatistics
 
 class ExpectedCompleteReversibleObjective:
 
@@ -67,7 +74,7 @@ class ExpectedCompleteReversibleObjective:
         ## With the weights for the univariate and bivariate features to obtain the rate matrix,
         ## and stationary distribution
 
-        rateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure.ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, weightsForPi, weightsForBivariate, nBivariateFeatWeightsDictionary)
+        rateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, weightsForPi, weightsForBivariate, nBivariateFeatWeightsDictionary)
         stationaryDist = rateMtx.getStationaryDist()
         unnormalizedRateMtx = rateMtx.getRateMtx()
 
@@ -86,7 +93,7 @@ class ExpectedCompleteReversibleObjective:
         term4 = -self.TStarStar * stationaryDist
         term5 = -self.mStar
         term6 = self.mStarStar * stationaryDist
-        gradient[0:nStates] = self.fixDerivative + term2  + term4 + term5 + term6
+        gradient[0:nStates] = self.fixDerivative + term2 + term4 + term5 + term6
 
         ## combined with the Normal prior information for the weight
         gradient[0:nStates] = gradient[0:nStates] - self.kappa * weightsForPi
@@ -261,124 +268,154 @@ class ExpectedCompleteReversibleObjective:
 
 
 ## test the correctness of the gradient，test passed, using numerical gradient 
-## check methods to test the correctness
-def test():
-    nStates = 4
-    nRep = 1000
+
+
+def testCalculate():
+
+    ## test the correctness of the code using numeric gradient check
+    nStates = 6
+    nRep = 10000
     seedNum = np.arange(0, nRep)
     np.random.seed(123)
-    weights = np.random.uniform(0, 1, nStates)
+    weights = np.random.uniform(0, 1, 18)
     print(weights)
-    delta = 0.0001
-    exchangeCoef = np.array((1, 2, 3, 4, 5, 6))
+    # delta = 0.000001
+    bivariateFeatDictionary = getHardCodedDict()
+    weightsForPi = weights[0:nStates]
+    weightsForBivariate = weights[nStates:len(weights)]
 
     ## get the rate matrix
-    testRateMtx = ReversibleRateMtxPiAndExchangeGTR(nStates, weights, exchangeCoef)
+    testRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, weightsForPi, weightsForBivariate,
+                                                                  bivariateFeatDictionary)
     stationaryDist = testRateMtx.getStationaryDist()
     rateMtx = testRateMtx.getRateMtx()
-    bt = 5.0
-    nSeq = 1000
 
-    nInit = np.zeros(nStates)
-    holdTimes = np.zeros(nStates)
-    nTrans = np.zeros((nStates, nStates))
+    bt = 3.0
+    nSeq = 500
+    ## simulate the observation data first
+    seqList = generateFullPathUsingRateMtxAndStationaryDist(RandomState(seedNum[0]), nSeq, nStates, rateMtx,
+                                                            stationaryDist,
+                                                            bt)
+    ## get observed sequences at a finite number of time points
+    dataGenerationRegime = DataGenerationRegime(nStates=nStates,
+                                                bivariateFeatIndexDictionary=bivariateFeatDictionary,
+                                                btLength=bt, nSeq=nSeq, stationaryWeights=weightsForPi,
+                                                bivariateWeights=weightsForBivariate, interLength=0.5)
+    ## summarize the sufficient statistics
+    obsData = dataGenerationRegime.generatingSeqGivenRateMtxAndBtInterval(seqList)
+    marginalResult = dataGenerationRegime.summaryFirstLastStatesArrayIntoMatrix(obsData, nStates)
+    obsNInit0 = marginalResult['nInit']
+    ## get the marginal count from observations
+    marginalCount = marginalResult['count']
 
+    ## extract first state from sequences
+    ## Below are our actual observation sequences
+    firstStates = getFirstAndLastStateOfListOfSeq(seqList)['firstLastState'][:, 0]
+    unique, counts = np.unique(firstStates, return_counts=True)
+    nInitCount = np.asarray((unique, counts)).T
+    obsNInit = np.zeros(nStates)
+    obsNInit = obsNInit + nInitCount[:, 1]
+    print(obsNInit)  ## it should be equal to obsNinit0
+
+    rateMtxExpectations = RateMtxExpectations(rateMtx, 0.5)
+    marginalExpectations = rateMtxExpectations.expectationsWithMarginalCount(marginalCount)
+    ## get expected holding time
+    expectedHoldingTime = np.diag(marginalExpectations)
+    ## get expected transition count
+    expectedTransCount = deepcopy(marginalExpectations)
+    np.fill_diagonal(expectedTransCount, 0)
+
+    expectedCompleteObjectiveFromExptStat = ExpectedCompleteReversibleObjective(expectedHoldingTime, obsNInit,
+                                                                                expectedTransCount,
+                                                                                nBivariateFeatWeightsDictionary=bivariateFeatDictionary)
+    expectedForwardResult = expectedCompleteObjectiveFromExptStat.calculate(weights, bivariateFeatDictionary)
+    exptFuncValue = expectedForwardResult['value']
+    exptGradient = expectedForwardResult['gradient']
+    print(exptFuncValue)
+    print(exptGradient)
+
+    # nInit = np.zeros(nStates)
+    # holdTimes = np.zeros(nStates)
+    # nTrans = np.zeros((nStates, nStates))
+    #
+    # for j in range(nRep):
+    # # ## do forward sampling
+    #     seqList = generateFullPathUsingRateMtxAndStationaryDist(RandomState(seedNum[0]), nSeq, nStates, rateMtx, stationaryDist, bt)
+    # #         ## summarize the sufficient statistics
+    # #         ## extract first state from sequences
+    #     firstStates = getFirstAndLastStateOfListOfSeq(seqList)['firstLastState'][:, 0]
+    #     unique, counts = np.unique(firstStates, return_counts=True)
+    #     nInitCount = np.asarray((unique, counts)).T
+    #     nInit = nInit + nInitCount[:, 1]
+    #
+    #     for i in range(nSeq):
+    #         sequences = seqList[i]
+    #         holdTimes = holdTimes + sequences['sojourn']
+    #         nTrans = nTrans + sequences['transitCount']
+    #
+    # avgNTrans = nTrans/nRep
+    # avgHoldTimes = holdTimes/nRep
+    # avgNInit = nInit/nRep
+
+
+    T = 0.5
+    postSampler = EndPointSampler(rateMtx, T)
+    pathStat2 = PathStatistics(nStates)
+    nSegment = dataGenerationRegime.nPairSeq
+
+    counter =0
     for j in range(nRep):
-        ## do forward sampling
-        seqList = FullTrajectorGeneration.generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, seedNum[j], rateMtx, stationaryDist, bt)
-        ## summarize the sufficient statistics
-        ## extract first state from sequences
-        firstStates = FullTrajectorGeneration.getFirstAndLastStateOfListOfSeq(seqList)['firstLastState'][:, 0]
-        unique, counts = np.unique(firstStates, return_counts=True)
-        nInitCount = np.asarray((unique, counts)).T
-        nInit = nInit + nInitCount[:, 1]
+        ## do posterior path sampling
+        ## for each segment of the observed path for the time series,
+        ## loop over each segment of the sequence
+        for i in range(nSegment):
+            ## loop over each sequences
+            for k in range(len(seqList)):
+                p2 = Path()
+                startState = obsData[i][int(k)][0]
+                endState = obsData[i][k][1]
+                postSampler.sample(np.random.RandomState(counter), int(startState), int(endState), T,
+                                   pathStat2, p2)
+                counter = counter + 1
+        if j%10 == 0:
+            print(j)
 
-        for i in range(nSeq):
-            sequences = seqList[i]
-            holdTimes = holdTimes + sequences['sojourn']
-            nTrans = nTrans + sequences['transitCount']
+    m2 = pathStat2.getCountsAsSimpleMatrix() / nRep
+    avgNInit = obsNInit
+    avgNTrans = deepcopy(m2)
+    np.fill_diagonal(avgNTrans, 0)
+    avgHoldTimes = m2.diagonal()
 
-    avgNTrans = nTrans/nRep
-    avgHoldTimes = holdTimes/nRep
-    avgNInit = nInit/nRep
-
-    originalExpectedCompleteObjective = ExpectedCompleteReversibleObjective(avgHoldTimes, avgNInit, avgNTrans)
-    forwardResult = originalExpectedCompleteObjective.calculateForPiUnnormalized(weights, exchangeCoef)
+    originalExpectedCompleteObjective = ExpectedCompleteReversibleObjective(avgHoldTimes, avgNInit, avgNTrans, nBivariateFeatWeightsDictionary=bivariateFeatDictionary)
+    forwardResult = originalExpectedCompleteObjective.calculate(weights, bivariateFeatDictionary)
     funcValue = forwardResult['value']
     gradient = forwardResult['gradient']
-
-    ## another way of calculate the function value using for loop instead of vectorization
-    term1 = np.dot(avgNInit, np.log(stationaryDist))
-    term2 = 0
-    term3 = 0
-    for i in range(nStates):
-        term3 = term3 + avgHoldTimes[i] * rateMtx[i, i]
-        for j in range(nStates):
-            if j!=i:
-                term2 = term2 + avgNTrans[i,j]* np.log(rateMtx[i,j])
-
-    funcValueAnotherApproach = -(term1 + term2 + term3 -0.5*1* np.dot(weights, weights))
-    print(funcValueAnotherApproach)
     print(funcValue)
-
-    ## Here is the numerical method that we use to check the correctness of the gradient calculation
-    ## http://ufldl.stanford.edu/wiki/index.php/Gradient_checking_and_advanced_optimization
-    ## Basically, we change each element of the weight one by one, denote funcDelta as the change in the function value
-    ## and the corresponding gradient for each element is funcDelta/delta, where delta is the change in each element of
-    ## the variables
-    newGradient = np.zeros(nStates)
-    for i in range(nStates):
-        newWeights = weights
-        nInitNew = np.zeros(nStates)
-        holdTimesNew = np.zeros(nStates)
-        nTransNew = np.zeros((nStates, nStates))
-        newWeights[i] = weights[i] + delta
-        testRateMtxNew = ReversibleRateMtxPiAndExchangeGTR(nStates, newWeights, exchangeCoef)
-        stationaryDistNew = testRateMtxNew.getStationaryDist()
-        rateMtxNew = testRateMtxNew.getRateMtx()
-        for j in range(nRep):
-            seqList = FullTrajectorGeneration.generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, seedNum[j],rateMtxNew,stationaryDistNew, bt)
-            firstStates = FullTrajectorGeneration.getFirstAndLastStateOfListOfSeq(seqList)['firstLastState'][:, 0]
-            unique, counts = np.unique(firstStates, return_counts=True)
-            nInitCount = np.asarray((unique, counts)).T
-            nInitNew = nInitNew + nInitCount[:, 1]
-
-            for k in range(nSeq):
-                sequences = seqList[k]
-                holdTimesNew = holdTimesNew + sequences['sojourn']
-                nTransNew = nTransNew + sequences['transitCount']
-        avgNTransNew = nTransNew/nRep
-        avgHoldTimesNew = holdTimesNew/nRep
-        avgNInitNew = nInitNew/nRep
-        newExpectedCompleteObjective = ExpectedCompleteReversibleObjective(holdTimes=avgHoldTimesNew, nInit=avgNInitNew, nTrans=avgNTransNew)
-        newforwardResult = newExpectedCompleteObjective.calculateForPiUnnormalized(newWeights, exchangeCoef)
-        newFuncValue = newforwardResult['value']
-        newGradient[i] = (newFuncValue-funcValue)/delta
-
-    print(newGradient)
     print(gradient)
 
-# def testCalculate():
-#
-#     ## test the correctness of the code using numeric gradient check
-#
-#     nStates = 6
+
+
+def main():
+    testCalculate()
+
+if __name__ == "__main__": main()
+
+
+# ## check methods to test the correctness
+# def test():
+#     nStates = 4
 #     nRep = 100
 #     seedNum = np.arange(0, nRep)
 #     np.random.seed(123)
-#     weights = np.random.uniform(0, 1, 18)
+#     weights = np.random.uniform(0, 1, nStates)
 #     print(weights)
-#     delta = 0.000001
-#     bivariateFeatDictionary = getHardCodedDict()
-#     weightsForPi = weights[0:nStates]
-#     weightsForBivariate = weights[nStates:len(weights)]
+#     delta = 0.0001
+#     exchangeCoef = np.array((1, 2, 3, 4, 5, 6))
 #
 #     ## get the rate matrix
-#     testRateMtx = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, weightsForPi, weightsForBivariate,
-#                                                                   bivariateFeatDictionary)
+#     testRateMtx = ReversibleRateMtxPiAndExchangeGTR(nStates, weights, exchangeCoef)
 #     stationaryDist = testRateMtx.getStationaryDist()
 #     rateMtx = testRateMtx.getRateMtx()
-#
 #     bt = 5.0
 #     nSeq = 100
 #
@@ -388,8 +425,7 @@ def test():
 #
 #     for j in range(nRep):
 #         ## do forward sampling
-#         seqList = generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, seedNum[j], rateMtx, stationaryDist,
-#                                                                     bt)
+#         seqList = generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, seedNum[j], rateMtx, stationaryDist, bt)
 #         ## summarize the sufficient statistics
 #         ## extract first state from sequences
 #         firstStates = getFirstAndLastStateOfListOfSeq(seqList)['firstLastState'][:, 0]
@@ -402,12 +438,12 @@ def test():
 #             holdTimes = holdTimes + sequences['sojourn']
 #             nTrans = nTrans + sequences['transitCount']
 #
-#     avgNTrans = nTrans / nRep
-#     avgHoldTimes = holdTimes / nRep
-#     avgNInit = nInit / nRep
+#     avgNTrans = nTrans/nRep
+#     avgHoldTimes = holdTimes/nRep
+#     avgNInit = nInit/nRep
 #
-#     originalExpectedCompleteObjective = ExpectedCompleteReversibleObjective(avgHoldTimes, avgNInit, avgNTrans, nBivariateFeatWeightsDictionary=bivariateFeatDictionary)
-#     forwardResult = originalExpectedCompleteObjective.calculate(weights, bivariateFeatDictionary)
+#     originalExpectedCompleteObjective = ExpectedCompleteReversibleObjective(avgHoldTimes, avgNInit, avgNTrans)
+#     forwardResult = originalExpectedCompleteObjective.calculateForPiUnnormalized(weights, exchangeCoef)
 #     funcValue = forwardResult['value']
 #     gradient = forwardResult['gradient']
 #
@@ -418,10 +454,10 @@ def test():
 #     for i in range(nStates):
 #         term3 = term3 + avgHoldTimes[i] * rateMtx[i, i]
 #         for j in range(nStates):
-#             if j != i:
-#                 term2 = term2 + avgNTrans[i, j] * np.log(rateMtx[i, j])
+#             if j!=i:
+#                 term2 = term2 + avgNTrans[i,j]* np.log(rateMtx[i,j])
 #
-#     funcValueAnotherApproach = -(term1 + term2 + term3 - 0.5 * 1 * np.dot(weights, weights))
+#     funcValueAnotherApproach = -(term1 + term2 + term3 -0.5*1* np.dot(weights, weights))
 #     print(funcValueAnotherApproach)
 #     print(funcValue)
 #
@@ -430,21 +466,18 @@ def test():
 #     ## Basically, we change each element of the weight one by one, denote funcDelta as the change in the function value
 #     ## and the corresponding gradient for each element is funcDelta/delta, where delta is the change in each element of
 #     ## the variables
-#     newGradient = np.zeros(len(weights))
-#     for i in range(len(weights)):
+#     newGradient = np.zeros(nStates)
+#     for i in range(nStates):
 #         newWeights = weights
 #         nInitNew = np.zeros(nStates)
 #         holdTimesNew = np.zeros(nStates)
 #         nTransNew = np.zeros((nStates, nStates))
 #         newWeights[i] = weights[i] + delta
-#         testRateMtxNew = ReversibleRateMtxPiAndBinaryWeightsWithGraphicalStructure(nStates, newWeights[0:nStates], newWeights[nStates:len(weights)],
-#                                                                       bivariateFeatDictionary)
+#         testRateMtxNew = ReversibleRateMtxPiAndExchangeGTR(nStates, newWeights, exchangeCoef)
 #         stationaryDistNew = testRateMtxNew.getStationaryDist()
 #         rateMtxNew = testRateMtxNew.getRateMtx()
-#
 #         for j in range(nRep):
-#             seqList = generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, seedNum[j], rateMtxNew,
-#                                                                         stationaryDistNew, bt)
+#             seqList =generateFullPathUsingRateMtxAndStationaryDist(nSeq, nStates, seedNum[j],rateMtxNew,stationaryDistNew, bt)
 #             firstStates = getFirstAndLastStateOfListOfSeq(seqList)['firstLastState'][:, 0]
 #             unique, counts = np.unique(firstStates, return_counts=True)
 #             nInitCount = np.asarray((unique, counts)).T
@@ -454,22 +487,13 @@ def test():
 #                 sequences = seqList[k]
 #                 holdTimesNew = holdTimesNew + sequences['sojourn']
 #                 nTransNew = nTransNew + sequences['transitCount']
-#         avgNTransNew = nTransNew / nRep
-#         avgHoldTimesNew = holdTimesNew / nRep
-#         avgNInitNew = nInitNew / nRep
-#         newExpectedCompleteObjective = ExpectedCompleteReversibleObjective(holdTimes=avgHoldTimesNew,
-#                                                                                nInit=avgNInitNew, nTrans=avgNTransNew, nBivariateFeatWeightsDictionary=bivariateFeatDictionary)
-#         newforwardResult = newExpectedCompleteObjective.calculate(newWeights, bivariateFeatDictionary)
+#         avgNTransNew = nTransNew/nRep
+#         avgHoldTimesNew = holdTimesNew/nRep
+#         avgNInitNew = nInitNew/nRep
+#         newExpectedCompleteObjective = ExpectedCompleteReversibleObjective(holdTimes=avgHoldTimesNew, nInit=avgNInitNew, nTrans=avgNTransNew)
+#         newforwardResult = newExpectedCompleteObjective.calculateForPiUnnormalized(newWeights, exchangeCoef)
 #         newFuncValue = newforwardResult['value']
-#         newGradient[i] = (newFuncValue - funcValue) / delta
+#         newGradient[i] = (newFuncValue-funcValue)/delta
 #
-#     print("We are testing the methods for both the univariate weights and the bivariate weights")
 #     print(newGradient)
-#     print(gradient)
-
-
-
-def main():
-    test()
-
-if __name__ == "__main__": main()
+#    print(gradient)

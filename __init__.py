@@ -35,3 +35,5 @@ from TrajectoryRay import *
 from CollisionContext import CollisionContext
 from LocalRFRunner import LocalRFRunner
 from CompareResults.ESS import essCalculator
+from MCMCForOnlyNormalFactors import *
+
