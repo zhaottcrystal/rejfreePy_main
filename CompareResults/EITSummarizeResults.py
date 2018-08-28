@@ -38,10 +38,10 @@ def TwoSamplesTestColwise(df1, df2, alpha=0.05, testName="KS"):
         else:
             raise ValueError("We don't support other tests except KS test and wilcox test")
 
-        if test[1] < alpha:
-            stat = test[0]
-            pvalue = test[1]
-            result_empty.loc[i]  = [i,  pvalue, stat, testName]
+        
+        stat = test[0]
+        pvalue = test[1]
+        result_empty.loc[i]  = [i,  pvalue, stat, testName]
     return result_empty
 
 def TwoSamplesTestColwiseFromFilePath(filepath1, filepath2, header=None, alpha=0.05, testName="KS"):
