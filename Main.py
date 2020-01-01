@@ -1,6 +1,7 @@
 import sys
-#sys.path.append("/Users/crystal/Dropbox/rejfree/rejfreePy")
-#os.chdir("/Users/crystal/Dropbox/rejfree/rejfreePy")
+import os
+sys.path.append("/Users/crystal/PycharmProjects/rejfreePy_main")
+os.chdir("/Users/crystal/PycharmProjects/rejfreePy_main")
 from numpy.random import RandomState
 import DataGenerationRegime
 import MCMCRunningRegime
@@ -10,7 +11,6 @@ import argparse
 import FullTrajectorGeneration
 import numpy as np
 import pickle
-import os
 import cProfile
 
 ## add command line argument
@@ -25,6 +25,8 @@ parser.add_argument('--onlyHMC', action="store_true", help='HMC flag, the existe
 parser.add_argument('--HMCPlusBPS', action='store_true', help='BPS flag, the existence of the argument indicates a combination of HMC and local BPS is used.')
 ## add the trajectory length if we use local bps
 parser.add_argument('-trajectoryLength', action="store", dest='trajectoryLength', default = 0.125, help='save the trajectory length of the local bps sampler', type=float)
+## add indicator to indicate whether we will normalize the trajectory length in local bps
+parser.add_argument('--normalizeTraj', action='store_true', help='Normalize trajectory length flag, the existence of the argument indicates the trajectory length will be normalized.')
 ## add the total number of mcmc iterations
 parser.add_argument('-nMCMCIter', action="store", dest='nMCMCIter', default=2000, type=int, help='store the total number of posterior samples')
 ## add the burning period of the posterior samples
@@ -78,7 +80,15 @@ nLeapFrogSteps = results.nLeapFrogSteps
 stepSize = results.stepSize
 trajectoryLength = results.trajectoryLength
 initialSampleSeed = results.initialSampleSeed
-interLength= results.interLength
+interLength = results.interLength
+
+###########################################
+###### normalize the trajectory length
+if results.normalizeTraj:
+    trajectoryLength = 1/(nSeq * interLength * (bt/interLength + 1))
+print(trajectoryLength)
+##########################################
+
 dumpResultIterations = results.dumpResultIterations
 refreshmentMethod = results.refreshmentMethod
 provideSeq = results.provideSeq
@@ -127,6 +137,7 @@ if not provideSeq:
     suffStat = dataRegime.getSufficientStatFromSeq(seqList)
     firstLastStatesArrayAll = dataRegime.generatingSeqGivenRateMtxAndBtInterval(seqList)
     trueRateMtx = dataRegime.rateMtxObj.getRateMtx()
+    print(trueRateMtx)
 
     ## try if using pickle library works
     ## serialize dataRegime so that when we compare HMC and BPS, they can have the same data frame

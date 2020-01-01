@@ -16,7 +16,7 @@ class EventQueue:
         self.eventTimes = {}
     
     def pollEvent(self):
-        return self.sortedEvents.popitem(last=False)
+        return self.sortedEvents.popitem(index=0)
     
     def peekEvent(self):
         return self.sortedEvents.peekitem(index=0)
