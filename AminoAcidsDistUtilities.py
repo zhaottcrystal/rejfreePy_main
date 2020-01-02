@@ -9,8 +9,9 @@ import pandas as pd
 import numpy as np
 from copy import deepcopy
 
-AminoAcidsDist = pd.read_excel("/Users/crystal/Dropbox/rejfreePy_main_results/ReadDataset/EuclideanDistanceForAminoAcids.xlsx",
-                               sheet_name="Sheet1", header=0)
+# AminoAcidsDist = pd.read_excel("/Users/crystal/Dropbox/rejfreePy_main_results/ReadDataset/EuclideanDistanceForAminoAcids.xlsx",
+#                               sheet_name="Sheet1", header=0)
+AminoAcidsDist = pd.read_excel("/home/tingtingzhao/rejfreePy_main_results/ReadDataset/EuclideanDistanceForAminoAcids.xlsx", sheet_name="Sheet1", header=0)
 AminoAcidsDist.set_index("Amino Acids", inplace=True)
 AminoAcidsDist.head(3)
 

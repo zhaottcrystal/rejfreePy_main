@@ -160,7 +160,8 @@ def getBivariateFeatGivenAllAminoAcidPairs():
 
 ## create all the helper functions to rank pairs of amino acids according to their distances
 ## read amino acids pairs distances into a csv file
-AminoAcidsDist = pd.read_excel("/Users/crystal/Dropbox/rejfreePy_main_results/ReadDataset/EuclideanDistanceForAminoAcids.xlsx",sheet_name="Sheet1",header=0)
+# AminoAcidsDist = pd.read_excel("/Users/crystal/Dropbox/rejfreePy_main_results/ReadDataset/EuclideanDistanceForAminoAcids.xlsx",sheet_name="Sheet1",header=0)
+AminoAcidsDist = pd.read_excel("/home/tingtingzhao/rejfreePy_main_results/ReadDataset/EuclideanDistanceForAminoAcids.xlsx", sheet_name="Sheet1", header=0)
 AminoAcidsDist.set_index("Amino Acids", inplace=True)
 AminoAcidsDist.head(3)
 

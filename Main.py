@@ -1,7 +1,9 @@
 import sys
 import os
-sys.path.append("/Users/crystal/PycharmProjects/rejfreePy_main")
-os.chdir("/Users/crystal/PycharmProjects/rejfreePy_main")
+# sys.path.append("/Users/crystal/PycharmProjects/rejfreePy_main")
+# os.chdir("/Users/crystal/PycharmProjects/rejfreePy_main")
+sys.path.append("/home/tingtingzhao/rejfreePy_main")
+os.chdir("/home/tingtingzhao/rejfreePy_main")
 from numpy.random import RandomState
 import DataGenerationRegime
 import MCMCRunningRegime
@@ -23,6 +25,8 @@ parser.add_argument('-nStates', action="store", type=int, dest='nStates', defaul
 parser.add_argument('--onlyHMC', action="store_true", help='HMC flag, the existence of the argument indicates HMC is used.')
 ## add boolean variable to indicate whether we use the local bps algorithm
 parser.add_argument('--HMCPlusBPS', action='store_true', help='BPS flag, the existence of the argument indicates a combination of HMC and local BPS is used.')
+## add standard output option
+parser.add_argument('--logFile', action='store_true', help='flag to indicate the standard output will be saved to a file')
 ## add the trajectory length if we use local bps
 parser.add_argument('-trajectoryLength', action="store", dest='trajectoryLength', default = 0.125, help='save the trajectory length of the local bps sampler', type=float)
 ## add indicator to indicate whether we will normalize the trajectory length in local bps
@@ -82,6 +86,11 @@ trajectoryLength = results.trajectoryLength
 initialSampleSeed = results.initialSampleSeed
 interLength = results.interLength
 
+if not os.path.exists(dir_name):
+    os.mkdir(dir_name)
+logFileName = os.path.join(dir_name, 'log.txt')
+if results.logFile:
+    sys.stdout = open(logFileName, 'w')
 ###########################################
 ###### normalize the trajectory length
 if results.normalizeTraj:
